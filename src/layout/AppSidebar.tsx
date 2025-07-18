@@ -17,7 +17,6 @@ import {
   TableIcon,
   UserCircleIcon,
 } from "../icons/index";
-import SidebarWidget from "./SidebarWidget";
 
 type NavItem = {
   name: string;
@@ -313,25 +312,25 @@ const AppSidebar: React.FC = () => {
             <>
               <Image
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo/miniseller-logo-bg-removed-908x404.png"
                 alt="Logo"
                 width={150}
-                height={40}
+                height={67}
               />
               <Image
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                src="/images/logo/miniseller-logo-bg-removed-908x404.png"
                 alt="Logo"
                 width={150}
-                height={40}
+                height={67}
               />
             </>
           ) : (
             <Image
-              src="/images/logo/logo-icon.svg"
+              src="/images/logo/miniseller-logo-bg-removed-908x404.png"
               alt="Logo"
               width={32}
-              height={32}
+              height={14}
             />
           )}
         </Link>
@@ -374,7 +373,6 @@ const AppSidebar: React.FC = () => {
             </div>
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
       </div>
     </aside>
   );
