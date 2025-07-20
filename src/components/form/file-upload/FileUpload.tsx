@@ -83,6 +83,21 @@ const FileUpload: React.FC<FileUploadProps> = ({
     }
   };
 
+  const handleDataUpdate = (updatedData: ParsedData) => {
+    setParsedData(updatedData);
+    
+    // Notify parent component
+    if (onDataProcessed) {
+      onDataProcessed(updatedData);
+    }
+
+    // Update localStorage
+    localStorage.setItem('lastUploadedData', JSON.stringify({
+      data: updatedData,
+      timestamp: new Date().toISOString(),
+    }));
+  };
+
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Upload Zone */}
@@ -179,7 +194,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
       {/* Data Preview */}
       {parsedData && uploadState === 'success' && (
-        <DataPreview data={parsedData} />
+        <DataPreview 
+          data={parsedData} 
+          onDataUpdate={handleDataUpdate}
+        />
       )}
     </div>
   );

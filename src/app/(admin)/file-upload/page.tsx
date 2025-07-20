@@ -26,7 +26,7 @@ const FileUploadPage: React.FC = () => {
             File Upload
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Upload and process Excel or CSV files. Preview your data before processing.
+            Upload and process Excel or CSV files of your orders to calculate your revenue. Preview your data before and after calculation.
           </p>
         </div>
 
@@ -110,7 +110,7 @@ const FileUploadPage: React.FC = () => {
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
               Upload Summary
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {uploadedData.totalRows}
@@ -134,6 +134,18 @@ const FileUploadPage: React.FC = () => {
                   ✓
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">Processed</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">
+                  {uploadedData.hasRevenueCalculation ? (
+                    <span className="text-green-600 dark:text-green-400">✓</span>
+                  ) : (
+                    <span className="text-yellow-600 dark:text-yellow-400">⏳</span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {uploadedData.hasRevenueCalculation ? 'Calculated' : 'Pending Calculation'}
+                </div>
               </div>
             </div>
           </div>

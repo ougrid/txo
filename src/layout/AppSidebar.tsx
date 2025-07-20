@@ -33,11 +33,6 @@ const navItems: NavItem[] = [
     subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
     icon: <UserCircleIcon />,
     name: "User Profile",
     path: "/profile",
@@ -46,6 +41,11 @@ const navItems: NavItem[] = [
     icon: <FileIcon />,
     name: "File Upload",
     path: "/file-upload",
+  },
+  {
+    icon: <CalenderIcon />,
+    name: "Calendar",
+    path: "/calendar",
   },
 
   {
