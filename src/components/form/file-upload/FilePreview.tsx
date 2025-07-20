@@ -21,7 +21,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getFileIcon = (fileName: string): JSX.Element => {
+  const getFileIcon = (fileName: string): React.JSX.Element => {
     const extension = fileName.split('.').pop()?.toLowerCase();
     
     const iconClass = "w-8 h-8";
