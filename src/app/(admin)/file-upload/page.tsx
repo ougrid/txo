@@ -2,15 +2,6 @@
 
 import React, { useState } from 'react';
 import { FileUpload, ParsedData } from '@/components/form/file-upload';
-import type { Metadata } from "next";
-
-// Note: Metadata export doesn't work in client components, 
-// so we'll need to move this to a server component wrapper
-// For now, keeping this as reference for future refactor
-const pageMetadata: Metadata = {
-  title: "File Upload - MiniSeller",
-  description: "Upload and process Excel/CSV files for order management in MiniSeller platform.",
-};
 
 const FileUploadPage: React.FC = () => {
   const [uploadedData, setUploadedData] = useState<ParsedData | null>(null);
