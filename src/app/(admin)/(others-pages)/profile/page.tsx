@@ -5,9 +5,9 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "User Profile | TXO Dashboard",
+  title: "User Profile - MiniSeller",
   description:
-    "User profile page for TXO Dashboard",
+    "Manage your MiniSeller user profile and account settings.",
 };
 
 export default function Profile() {
