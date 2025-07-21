@@ -235,8 +235,16 @@ export const validateParsedData = (data: ParsedData): { isValid: boolean; errors
  */
 export const exportToCSV = (data: ParsedData): string => {
   const csvContent = [
-    data.headers.join(','),
-    ...data.rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    // Properly quote headers to handle commas within header names
+    data.headers.map(header => `"${String(header).replace(/"/g, '""')}"`).join(','),
+    ...data.rows.map(row => {
+      // Ensure each row has the same number of columns as headers
+      const normalizedRow = [...row];
+      while (normalizedRow.length < data.headers.length) {
+        normalizedRow.push('');
+      }
+      return normalizedRow.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',');
+    })
   ].join('\n');
   
   return csvContent;
@@ -340,7 +348,7 @@ export const processRevenueCalculation = (data: ParsedData): ParsedData => {
     };
   }
 
-  // Find required columns
+  // Find required columns (use original headers for column mapping)
   const revenueColumns = findRevenueCalculationColumns(data.headers);
   if (!revenueColumns) {
     return {
@@ -349,7 +357,7 @@ export const processRevenueCalculation = (data: ParsedData): ParsedData => {
     };
   }
 
-  // Find status column
+  // Find status column (use original headers for column mapping)
   const statusColumnIndex = data.headers.findIndex(header => 
     header.trim().toLowerCase().includes('สถานะการสั่งซื้อ') || 
     header.trim().toLowerCase().includes('order status')
@@ -364,15 +372,21 @@ export const processRevenueCalculation = (data: ParsedData): ParsedData => {
   let processedRows = 0;
 
   const newRows = data.rows.map(row => {
+    // Normalize row length to match header count (fill missing columns with empty strings)
+    const normalizedRow = [...row];
+    while (normalizedRow.length < data.headers.length) {
+      normalizedRow.push('');
+    }
+    
     let revenue = 0;
     
     // Only calculate revenue for specific order statuses
-    if (statusColumnIndex >= 0 && row[statusColumnIndex]) {
-      const status = String(row[statusColumnIndex]).trim();
+    if (statusColumnIndex >= 0 && normalizedRow[statusColumnIndex]) {
+      const status = String(normalizedRow[statusColumnIndex]).trim();
       
       // Only calculate for "ที่ต้องจัดส่ง" and "สำเร็จแล้ว" orders
       if (status === 'ที่ต้องจัดส่ง' || status === 'สำเร็จแล้ว') {
-        revenue = calculateOrderRevenue(row, revenueColumns);
+        revenue = calculateOrderRevenue(normalizedRow, revenueColumns);
         totalRevenue += revenue;
       }
       
@@ -380,12 +394,12 @@ export const processRevenueCalculation = (data: ParsedData): ParsedData => {
       ordersByStatus[status] = (ordersByStatus[status] || 0) + 1;
     } else {
       // If no status column or empty status, still calculate revenue
-      revenue = calculateOrderRevenue(row, revenueColumns);
+      revenue = calculateOrderRevenue(normalizedRow, revenueColumns);
       totalRevenue += revenue;
     }
     
     processedRows++;
-    return [...row, revenue.toFixed(2)];
+    return [...normalizedRow, revenue.toFixed(2)];
   });
 
   return {
