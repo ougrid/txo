@@ -15,14 +15,11 @@ export function DatasetSelector({ className = '' }: DatasetSelectorProps) {
     deselectDataset,
     selectAllDatasets,
     deselectAllDatasets,
-    selectActiveDatasets,
     getAllStoredData
   } = useDashboard();
 
   const allData = getAllStoredData();
-  const activeData = allData.filter(data => data.isActive);
   const isAllSelected = selectedDatasets.length === allData.length && allData.length > 0;
-  const isActiveSelected = selectedDatasets.length === activeData.length && activeData.length > 0 && selectedDatasets.every(id => activeData.some(data => data.id === id));
   const hasSelection = selectedDatasets.length > 0;
 
   const handleDatasetToggle = (id: string) => {
@@ -102,14 +99,6 @@ export function DatasetSelector({ className = '' }: DatasetSelectorProps) {
           </button>
           
           <button
-            onClick={selectActiveDatasets}
-            disabled={isActiveSelected}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-green-300 dark:border-green-600 text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Select Active ({activeData.length})
-          </button>
-          
-          <button
             onClick={deselectAllDatasets}
             disabled={!hasSelection}
             className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -162,11 +151,11 @@ export function DatasetSelector({ className = '' }: DatasetSelectorProps) {
                             {records.toLocaleString()} records
                           </span>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            dataset.isActive
+                            dataset.isSelected
                               ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                               : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
                           }`}>
-                            {dataset.isActive ? 'Active' : 'Inactive'}
+                            {dataset.isSelected ? 'Selected' : 'Not Selected'}
                           </span>
                         </div>
                       </div>

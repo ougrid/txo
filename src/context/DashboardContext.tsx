@@ -23,8 +23,8 @@ interface ParsedData {
 }
 
 interface DashboardContextType {
-  // Current active data
-  activeDashboard: StoredDashboardData | null;
+  // Current selected data for single view (first selected or legacy compatibility)
+  primaryDashboard: StoredDashboardData | null;
   isLoading: boolean;
   error: string | null;
 
@@ -33,7 +33,7 @@ interface DashboardContextType {
   aggregatedAnalytics: DashboardData | null;
 
   // Actions
-  setActiveDashboard: (data: StoredDashboardData) => void;
+  setPrimaryDashboard: (data: StoredDashboardData) => void;
   saveDashboardData: (
     parsedData: ParsedData, 
     fileName: string
@@ -48,7 +48,6 @@ interface DashboardContextType {
   deselectDataset: (id: string) => void;
   selectAllDatasets: () => void;
   deselectAllDatasets: () => void;
-  selectActiveDatasets: () => void;
   updateAggregatedAnalytics: () => void;
 
   // Storage info
@@ -66,7 +65,7 @@ interface DashboardProviderProps {
 }
 
 export function DashboardProvider({ children }: DashboardProviderProps) {
-  const [activeDashboard, setActiveDashboardState] = useState<StoredDashboardData | null>(null);
+  const [primaryDashboard, setPrimaryDashboardState] = useState<StoredDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedDatasets, setSelectedDatasets] = useState<string[]>([]);
@@ -240,56 +239,65 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     setAggregatedAnalytics(aggregated);
   }, []);
 
-  // Load active dashboard on mount
-  useEffect(() => {
-    loadActiveDashboard();
-    updateStorageInfo();
-    
-    // Listen for storage changes from other tabs
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'miniseller_dashboard_data' || e.key === 'miniseller_active_dashboard') {
-        loadActiveDashboard();
-        updateStorageInfo();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  // Auto-select active dataset when it changes
-  useEffect(() => {
-    if (activeDashboard && selectedDatasets.length === 0) {
-      setSelectedDatasets([activeDashboard.id]);
-      updateAggregatedAnalyticsForIds([activeDashboard.id]);
-    }
-  }, [activeDashboard, selectedDatasets.length, updateAggregatedAnalyticsForIds]);
-
-  const loadActiveDashboard = async () => {
+  const loadPrimaryDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
-      const activeData = DashboardStorage.getActiveDashboardData();
-      setActiveDashboardState(activeData);
+      const primaryData = DashboardStorage.getPrimaryDashboardData();
+      const selectedIds = DashboardStorage.getSelectedDatasetIds();
+      
+      setPrimaryDashboardState(primaryData);
+      setSelectedDatasets(selectedIds);
+      
+      if (selectedIds.length > 0) {
+        updateAggregatedAnalyticsForIds(selectedIds);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [updateAggregatedAnalyticsForIds]);
 
   const updateStorageInfo = () => {
     const info = DashboardStorage.getStorageInfo();
     setStorageInfo(info);
   };
 
-  const setActiveDashboard = (data: StoredDashboardData) => {
-    try {
-      DashboardStorage.setActiveDashboard(data.id);
-      setActiveDashboardState(data);
-      updateStorageInfo();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to set active dashboard');
+  // Load primary dashboard on mount (first selected dataset)
+  useEffect(() => {
+    loadPrimaryDashboard();
+    updateStorageInfo();
+    
+    // Listen for storage changes from other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'miniseller_dashboard_data') {
+        loadPrimaryDashboard();
+        updateStorageInfo();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [loadPrimaryDashboard]);
+
+  // Auto-update aggregated analytics when selection changes
+  useEffect(() => {
+    if (selectedDatasets.length > 0) {
+      updateAggregatedAnalyticsForIds(selectedDatasets);
+      // Set primary dashboard to first selected
+      const allData = getAllStoredData();
+      const firstSelected = allData.find(data => data.id === selectedDatasets[0]);
+      if (firstSelected) {
+        setPrimaryDashboardState(firstSelected);
+      }
+    } else {
+      setAggregatedAnalytics(null);
+      setPrimaryDashboardState(null);
     }
+  }, [selectedDatasets, updateAggregatedAnalyticsForIds]);
+
+  const setPrimaryDashboard = (data: StoredDashboardData) => {
+    setPrimaryDashboardState(data);
   };
 
   const saveDashboardData = async (
@@ -300,35 +308,24 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      // Check storage availability
-      if (!DashboardStorage.isStorageAvailable()) {
-        throw new Error('localStorage is not available in this browser');
-      }
-
-      // Check storage space
-      const currentStorage = DashboardStorage.getStorageInfo();
-      if (currentStorage.percentage > 90) {
-        throw new Error('Storage is nearly full. Please delete some old data first.');
-      }
-
-      // Generate analytics
+      // Generate analytics from parsed data
       const analytics = DashboardAnalytics.generateAnalytics(parsedData);
-
+      
       // Create stored data object
       const storedData: StoredDashboardData = {
-        id: `dashboard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: Date.now().toString() + Math.random().toString(36).substring(2),
         fileName,
         uploadDate: new Date().toISOString(),
         parsedData,
         analytics,
-        isActive: true
+        isSelected: true
       };
 
       // Save to localStorage
       DashboardStorage.saveDashboardData(storedData);
       
       // Update state
-      setActiveDashboardState(storedData);
+      setPrimaryDashboardState(storedData);
       updateStorageInfo();
 
       return { success: true, id: storedData.id };
@@ -346,14 +343,16 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      const success = DashboardStorage.setActiveDashboard(id);
-      if (success) {
-        await loadActiveDashboard();
-        return true;
-      } else {
-        setError('Dashboard not found');
-        return false;
+      // Just select this dataset
+      const currentSelected = DashboardStorage.getSelectedDatasetIds();
+      if (!currentSelected.includes(id)) {
+        const newSelected = [...currentSelected, id];
+        DashboardStorage.setSelectedDatasetIds(newSelected);
+        setSelectedDatasets(newSelected);
       }
+      
+      await loadPrimaryDashboard();
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard');
       return false;
@@ -369,10 +368,13 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
 
       const success = DashboardStorage.deleteDashboardData(id);
       if (success) {
-        // If deleted dashboard was active, clear active dashboard
-        if (activeDashboard?.id === id) {
-          setActiveDashboardState(null);
+        // If deleted dashboard was primary, clear primary dashboard
+        if (primaryDashboard?.id === id) {
+          setPrimaryDashboardState(null);
         }
+        // Update selected datasets
+        const newSelected = selectedDatasets.filter(selectedId => selectedId !== id);
+        setSelectedDatasets(newSelected);
         updateStorageInfo();
         return true;
       } else {
@@ -402,41 +404,30 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
 
   // Multi-selection functions
   const selectDataset = (id: string) => {
-    setSelectedDatasets(prev => {
-      if (!prev.includes(id)) {
-        const newSelection = [...prev, id];
-        updateAggregatedAnalyticsForIds(newSelection);
-        return newSelection;
-      }
-      return prev;
-    });
+    const newSelection = selectedDatasets.includes(id) 
+      ? selectedDatasets 
+      : [...selectedDatasets, id];
+    
+    setSelectedDatasets(newSelection);
+    DashboardStorage.setSelectedDatasetIds(newSelection);
   };
 
   const deselectDataset = (id: string) => {
-    setSelectedDatasets(prev => {
-      const newSelection = prev.filter(selectedId => selectedId !== id);
-      updateAggregatedAnalyticsForIds(newSelection);
-      return newSelection;
-    });
+    const newSelection = selectedDatasets.filter(selectedId => selectedId !== id);
+    setSelectedDatasets(newSelection);
+    DashboardStorage.setSelectedDatasetIds(newSelection);
   };
 
   const selectAllDatasets = () => {
     const allData = getAllStoredData();
     const allIds = allData.map(data => data.id);
     setSelectedDatasets(allIds);
-    updateAggregatedAnalyticsForIds(allIds);
+    DashboardStorage.setSelectedDatasetIds(allIds);
   };
 
   const deselectAllDatasets = () => {
     setSelectedDatasets([]);
-    setAggregatedAnalytics(null);
-  };
-
-  const selectActiveDatasets = () => {
-    const allData = getAllStoredData();
-    const activeIds = allData.filter(data => data.isActive).map(data => data.id);
-    setSelectedDatasets(activeIds);
-    updateAggregatedAnalyticsForIds(activeIds);
+    DashboardStorage.setSelectedDatasetIds([]);
   };
 
   const updateAggregatedAnalytics = () => {
@@ -444,12 +435,12 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   };
 
   const value: DashboardContextType = {
-    activeDashboard,
+    primaryDashboard,
     isLoading,
     error,
     selectedDatasets,
     aggregatedAnalytics,
-    setActiveDashboard,
+    setPrimaryDashboard,
     saveDashboardData,
     loadDashboardData,
     deleteDashboardData,
@@ -459,7 +450,6 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     deselectDataset,
     selectAllDatasets,
     deselectAllDatasets,
-    selectActiveDatasets,
     updateAggregatedAnalytics,
     storageInfo
   };
@@ -481,12 +471,23 @@ export function useDashboard() {
 
 // Hook for easy access to analytics data
 export function useDashboardAnalytics(): DashboardData | null {
-  const { activeDashboard } = useDashboard();
-  return activeDashboard?.analytics || null;
+  const { primaryDashboard, aggregatedAnalytics, selectedDatasets } = useDashboard();
+  
+  // Return aggregated analytics if multiple datasets selected, otherwise single dashboard analytics
+  if (selectedDatasets.length > 1) {
+    return aggregatedAnalytics;
+  }
+  
+  return primaryDashboard?.analytics || null;
 }
 
 // Hook for checking if dashboard is ready
 export function useIsDashboardReady(): boolean {
-  const { activeDashboard, isLoading } = useDashboard();
-  return !isLoading && activeDashboard !== null;
+  const { primaryDashboard, isLoading, selectedDatasets, aggregatedAnalytics } = useDashboard();
+  
+  if (selectedDatasets.length > 1) {
+    return !isLoading && aggregatedAnalytics !== null;
+  }
+  
+  return !isLoading && primaryDashboard !== null;
 }

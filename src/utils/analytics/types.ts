@@ -129,12 +129,10 @@ export interface StoredDashboardData {
     };
   };
   analytics: DashboardData;
-  isActive: boolean;
-  isSelected?: boolean; // New field for multi-selection
+  isSelected: boolean; // Unified field - replaces both isActive and old isSelected
 }
 
 export interface DatasetSelection {
   selectedIds: string[];
   selectAll: boolean;
-  activeOnly: boolean;
 }

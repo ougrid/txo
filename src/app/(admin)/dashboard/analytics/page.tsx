@@ -7,7 +7,7 @@ import { DateFilterUtils } from '@/utils/analytics/dateFilters';
 
 export default function AnalyticsPage() {
   const { 
-    activeDashboard, 
+    primaryDashboard, 
     isLoading, 
     error, 
     selectedDatasets, 
@@ -80,7 +80,7 @@ export default function AnalyticsPage() {
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {selectedDatasets.length > 0 
                     ? `Analyzing ${selectedDatasets.length} selected dataset${selectedDatasets.length !== 1 ? 's' : ''}`
-                    : activeDashboard?.fileName
+                    : primaryDashboard?.fileName
                   } • Last updated: {' '}
                   {new Date(analytics.metadata.lastUpdated).toLocaleString('th-TH')}
                 </p>

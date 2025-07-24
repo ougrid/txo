@@ -7,9 +7,8 @@ import Link from 'next/link';
 
 export default function DataManagementPage() {
   const { 
-    activeDashboard, 
+    primaryDashboard, 
     getAllStoredData, 
-    setActiveDashboard, 
     deleteDashboardData, 
     storageInfo,
     isLoading,
@@ -17,10 +16,6 @@ export default function DataManagementPage() {
   } = useDashboard();
 
   const allData = getAllStoredData();
-
-  const handleSetActive = (data: typeof allData[0]) => {
-    setActiveDashboard(data);
-  };
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this dataset?')) {
@@ -84,20 +79,20 @@ export default function DataManagementPage() {
           )}
         </div>
 
-        {/* Active Dataset */}
-        {activeDashboard && (
+        {/* Primary Dataset */}
+        {primaryDashboard && (
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6 border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
                   <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-3"></span>
-                  Active Dataset
+                  Primary Dataset
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {activeDashboard.fileName}
+                  {primaryDashboard.fileName}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-500">
-                  Uploaded: {new Date(activeDashboard.uploadDate).toLocaleString('th-TH')}
+                  Uploaded: {new Date(primaryDashboard.uploadDate).toLocaleString('th-TH')}
                 </p>
               </div>
               <div className="flex space-x-2">
@@ -185,23 +180,15 @@ export default function DataManagementPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          dataset.isActive 
+                          dataset.isSelected 
                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                             : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                         }`}>
-                          {dataset.isActive ? 'Active' : 'Inactive'}
+                          {dataset.isSelected ? 'Selected' : 'Not Selected'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
-                          {!dataset.isActive && (
-                            <button
-                              onClick={() => handleSetActive(dataset)}
-                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                            >
-                              Activate
-                            </button>
-                          )}
                           <button
                             onClick={() => handleDelete(dataset.id)}
                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
@@ -226,7 +213,7 @@ export default function DataManagementPage() {
           >
             📁 Upload New Dataset
           </a>
-          {(activeDashboard || selectedDatasets.length > 0) && (
+          {(primaryDashboard || selectedDatasets.length > 0) && (
             <Link
               href="/dashboard/analytics"
               className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
