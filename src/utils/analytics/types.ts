@@ -130,4 +130,11 @@ export interface StoredDashboardData {
   };
   analytics: DashboardData;
   isActive: boolean;
+  isSelected?: boolean; // New field for multi-selection
+}
+
+export interface DatasetSelection {
+  selectedIds: string[];
+  selectAll: boolean;
+  activeOnly: boolean;
 }

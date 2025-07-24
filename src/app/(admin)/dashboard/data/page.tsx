@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { useDashboard } from '@/context/DashboardContext';
+import { DatasetSelector } from '@/components/ui/DatasetSelector';
+import Link from 'next/link';
 
 export default function DataManagementPage() {
   const { 
@@ -10,7 +12,8 @@ export default function DataManagementPage() {
     setActiveDashboard, 
     deleteDashboardData, 
     storageInfo,
-    isLoading
+    isLoading,
+    selectedDatasets
   } = useDashboard();
 
   const allData = getAllStoredData();
@@ -108,6 +111,9 @@ export default function DataManagementPage() {
             </div>
           </div>
         )}
+
+        {/* Dataset Selection for Analytics */}
+        <DatasetSelector className="mb-6" />
 
         {/* Stored Datasets */}
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
@@ -220,13 +226,18 @@ export default function DataManagementPage() {
           >
             📁 Upload New Dataset
           </a>
-          {activeDashboard && (
-            <a
+          {(activeDashboard || selectedDatasets.length > 0) && (
+            <Link
               href="/dashboard/analytics"
               className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               📊 View Analytics
-            </a>
+              {selectedDatasets.length > 0 && (
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                  {selectedDatasets.length}
+                </span>
+              )}
+            </Link>
           )}
         </div>
       </div>

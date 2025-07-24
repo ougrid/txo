@@ -6,10 +6,20 @@ import { DateFilter } from '@/utils/analytics/types';
 import { DateFilterUtils } from '@/utils/analytics/dateFilters';
 
 export default function AnalyticsPage() {
-  const { activeDashboard, isLoading, error } = useDashboard();
-  const analytics = useDashboardAnalytics();
+  const { 
+    activeDashboard, 
+    isLoading, 
+    error, 
+    selectedDatasets, 
+    aggregatedAnalytics 
+  } = useDashboard();
+  const singleAnalytics = useDashboardAnalytics();
   const isReady = useIsDashboardReady();
   const [selectedDateFilter, setSelectedDateFilter] = useState<DateFilter | null>(null);
+
+  // Use aggregated analytics if datasets are selected, otherwise use single dashboard analytics
+  const analytics = selectedDatasets.length > 0 ? aggregatedAnalytics : singleAnalytics;
+  const hasData = analytics !== null;
 
   if (isLoading) {
     return (
@@ -33,7 +43,7 @@ export default function AnalyticsPage() {
     );
   }
 
-  if (!isReady || !analytics) {
+  if (!hasData) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -69,7 +79,10 @@ export default function AnalyticsPage() {
                   Sales Analytics Dashboard
                 </h1>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  {activeDashboard?.fileName} • Last updated: {' '}
+                  {selectedDatasets.length > 0 
+                    ? `Analyzing ${selectedDatasets.length} selected dataset${selectedDatasets.length !== 1 ? 's' : ''}`
+                    : activeDashboard?.fileName
+                  } • Last updated: {' '}
                   {new Date(analytics.metadata.lastUpdated).toLocaleString('th-TH')}
                 </p>
               </div>
@@ -105,6 +118,37 @@ export default function AnalyticsPage() {
 
       {/* Dashboard Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Data Source Indicator */}
+        {selectedDatasets.length > 0 && (
+          <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                    <span className="text-white text-sm">📊</span>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    Multi-Dataset Analysis Active
+                  </h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Analyzing data from {selectedDatasets.length} selected dataset{selectedDatasets.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <a
+                  href="/dashboard/data"
+                  className="inline-flex items-center px-3 py-1.5 border border-blue-300 dark:border-blue-600 text-sm font-medium rounded-md text-blue-700 dark:text-blue-300 bg-white dark:bg-blue-900/30 hover:bg-blue-50 dark:hover:bg-blue-900/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Manage Selection
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
