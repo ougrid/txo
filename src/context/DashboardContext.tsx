@@ -129,6 +129,32 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       });
     });
 
+    // Aggregate products by revenue
+    const productsByRevenueMap = new Map<string, { revenue: number; quantity: number }>();
+    analyticsArray.forEach(analytics => {
+      analytics.products.topProductsByRevenue.forEach(item => {
+        const existing = productsByRevenueMap.get(item.name) || { revenue: 0, quantity: 0 };
+        productsByRevenueMap.set(item.name, {
+          revenue: existing.revenue + item.revenue,
+          quantity: existing.quantity + (item.quantity || 0)
+        });
+      });
+    });
+
+    // Calculate completion rate from order status
+    const completedStatusKeys = ['สำเร็จแล้ว', 'completed', 'success', 'delivered'];
+    const completedOrders = Array.from(ordersByStatusMap.entries())
+      .filter(([status]) => completedStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase())))
+      .reduce((sum, [, count]) => sum + count, 0);
+    const completionRate = totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
+
+    // Calculate cancellation rate from order status
+    const cancelledStatusKeys = ['ยกเลิกแล้ว', 'cancelled', 'canceled', 'rejected'];
+    const cancelledOrders = Array.from(ordersByStatusMap.entries())
+      .filter(([status]) => cancelledStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase())))
+      .reduce((sum, [, count]) => sum + count, 0);
+    const cancellationRate = totalOrders > 0 ? (cancelledOrders / totalOrders) * 100 : 0;
+
     // Create aggregated analytics object
     const aggregated: DashboardData = {
       revenue: {
@@ -154,8 +180,8 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
           percentage: totalOrders > 0 ? (count / totalOrders) * 100 : 0
         })),
         averageOrdersPerDay: 0, // Would need date range calculation
-        completionRate: 0, // Would need status analysis
-        cancellationRate: 0, // Would need status analysis
+        completionRate: completionRate,
+        cancellationRate: cancellationRate,
         orderTrends: [] // Would need date grouping
       },
       geographic: {
@@ -165,18 +191,34 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
           orders: data.orders
         })).sort((a, b) => b.revenue - a.revenue),
         revenueByDistrict: [], // Would need district aggregation
-        topProvinces: [], // Derived from revenueByProvince
+        topProvinces: Array.from(revenueByProvinceMap.entries())
+          .map(([province, data]) => ({
+            province,
+            revenue: data.revenue,
+            percentage: totalRevenue > 0 ? (data.revenue / totalRevenue) * 100 : 0
+          }))
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 10), // Top 10 provinces
         geographicDistribution: Object.fromEntries(
           Array.from(revenueByProvinceMap.entries()).map(([province, data]) => [province, data.revenue])
         ),
         provinceCoverage: revenueByProvinceMap.size
       },
       products: {
-        topProductsByRevenue: [],
+        topProductsByRevenue: Array.from(productsByRevenueMap.entries())
+          .map(([product, data]) => ({
+            name: product,
+            sku: '', // Would need SKU aggregation
+            revenue: data.revenue,
+            quantity: data.quantity,
+            averagePrice: data.quantity > 0 ? data.revenue / data.quantity : 0
+          }))
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 10), // Top 10 products
         topProductsByQuantity: [],
         productCategories: [],
         averageProductPrice: 0,
-        totalUniqueProducts: 0
+        totalUniqueProducts: productsByRevenueMap.size
       },
       payments: {
         revenueByPaymentMethod: [],
