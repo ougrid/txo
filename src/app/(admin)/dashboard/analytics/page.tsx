@@ -253,21 +253,66 @@ export default function AnalyticsPage() {
               Revenue by Order Status
             </h3>
             <div className="space-y-3">
-              {Object.entries(analytics.revenue.revenueByStatus).map(([status, revenue]) => (
-                <div key={status} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full mr-3 ${
-                      status === 'สำเร็จแล้ว' ? 'bg-green-500' :
-                      status === 'ยกเลิกแล้ว' ? 'bg-red-500' :
-                      status === 'ที่ต้องจัดส่ง' ? 'bg-yellow-500' : 'bg-gray-500'
-                    }`}></div>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{status}</span>
+              {Object.entries(analytics.revenue.revenueByStatus).map(([status, revenue]) => {
+                const isCancelled = status === 'ยกเลิกแล้ว' || status.toLowerCase().includes('cancelled');
+                return (
+                  <div key={status} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className={`w-3 h-3 rounded-full mr-3 ${
+                        status === 'สำเร็จแล้ว' ? 'bg-green-500' :
+                        status === 'ยกเลิกแล้ว' ? 'bg-red-500' :
+                        status === 'ที่ต้องจัดส่ง' ? 'bg-yellow-500' : 'bg-gray-500'
+                      }`}></div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{status}</span>
+                      {isCancelled && (
+                        <span className="ml-2 text-xs text-red-500 dark:text-red-400 font-medium">
+                          (Lost Potential)
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-sm font-medium ${
+                        revenue < 0 
+                          ? 'text-red-600 dark:text-red-400' 
+                          : 'text-gray-900 dark:text-white'
+                      }`}>
+                        {revenue < 0 ? '-' : ''}฿{Math.abs(revenue).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                      </span>
+                      {isCancelled && (
+                        <div className="relative group">
+                          <svg 
+                            className="w-4 h-4 text-red-500 dark:text-red-400 cursor-help" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                            Lost potential revenue (not deducted from total)
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    ฿{revenue.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
-                  </span>
+                );
+              })}
+            </div>
+            
+            {/* Explanatory Note */}
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400">
+              <div className="flex items-start">
+                <svg className="w-4 h-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="text-xs text-blue-700 dark:text-blue-300">
+                  <p className="font-medium mb-1">Revenue Calculation Notes:</p>
+                  <ul className="space-y-1 text-blue-600 dark:text-blue-400">
+                    <li>• <strong>Completed/Shipping orders:</strong> Show actual escrowed revenue from platform</li>
+                    <li>• <strong>Cancelled orders:</strong> Show lost potential revenue (not deducted from total)</li>
+                  </ul>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
 
