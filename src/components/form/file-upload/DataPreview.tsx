@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ParsedData, exportToCSV, exportToJSON, exportToExcel, processRevenueCalculation, getStatusBadgeColor } from './fileProcessing';
+import { useRouter } from 'next/navigation';
+import { ParsedData, exportToCSV, exportToJSON, exportToExcel, processRevenueCalculation, getStatusBadgeColor, prepareDataForAnalytics } from './fileProcessing';
+import { useDashboard } from '@/context/DashboardContext';
 import Badge from '../../ui/badge/Badge';
 
 interface DataPreviewProps {
@@ -16,7 +18,12 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onClose, onDataUpdate }
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [processedData, setProcessedData] = useState<ParsedData>(data);
+  const [isSavingToDashboard, setIsSavingToDashboard] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Dashboard and routing hooks
+  const { saveDashboardData } = useDashboard();
+  const router = useRouter();
 
   // Pagination logic
   const totalPages = Math.ceil(processedData.totalRows / rowsPerPage);
@@ -91,6 +98,34 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onClose, onDataUpdate }
     URL.revokeObjectURL(url);
 
     setShowExportMenu(false);
+  };
+
+  const handleViewDashboard = async () => {
+    if (!processedData.hasRevenueCalculation) {
+      alert('Please calculate revenue first to view dashboard analytics.');
+      return;
+    }
+
+    setIsSavingToDashboard(true);
+    try {
+      // Prepare data for analytics
+      const analyticsReadyData = prepareDataForAnalytics(processedData);
+      
+      // Save to dashboard context (localStorage)
+      const result = await saveDashboardData(analyticsReadyData, processedData.fileName);
+      
+      if (result.success) {
+        // Navigate to analytics dashboard
+        router.push('/dashboard/analytics');
+      } else {
+        alert(result.error || 'Failed to save data for dashboard');
+      }
+    } catch (error) {
+      console.error('Error saving to dashboard:', error);
+      alert('Failed to prepare dashboard. Please try again.');
+    } finally {
+      setIsSavingToDashboard(false);
+    }
   };
 
   const renderCellContent = (cell: string | number, columnIndex: number) => {
@@ -179,6 +214,32 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onClose, onDataUpdate }
                 )}
               </button>
             )}
+
+            {/* View Dashboard Button */}
+            <button
+              onClick={handleViewDashboard}
+              disabled={!processedData.hasRevenueCalculation || isSavingToDashboard}
+              className={`inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                processedData.hasRevenueCalculation && !isSavingToDashboard
+                  ? 'border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 cursor-not-allowed'
+              }`}
+              title={!processedData.hasRevenueCalculation ? 'Calculate revenue first to view dashboard' : 'View analytics dashboard'}
+            >
+              {isSavingToDashboard ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Preparing...
+                </>
+              ) : (
+                <>
+                  📊 View Dashboard
+                </>
+              )}
+            </button>
 
             {/* Export Dropdown */}
             <div className="relative group">

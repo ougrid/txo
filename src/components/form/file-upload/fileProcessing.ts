@@ -15,6 +15,22 @@ export interface ParsedData {
     ordersByStatus: Record<string, number>;
     processedRows: number;
   };
+  // Analytics-ready flag
+  analyticsReady?: boolean;
+  // Additional column mappings for analytics
+  dateColumnIndex?: number;
+  provinceColumnIndex?: number;
+  districtColumnIndex?: number;
+  productNameColumnIndex?: number;
+  skuColumnIndex?: number;
+  quantityColumnIndex?: number;
+  priceColumnIndex?: number;
+  paymentMethodColumnIndex?: number;
+  usernameColumnIndex?: number;
+  commissionColumnIndex?: number;
+  transactionFeeColumnIndex?: number;
+  serviceFeeColumnIndex?: number;
+  netSalePriceColumnIndex?: number;
 }
 
 export interface FileProcessingResult {
@@ -472,4 +488,66 @@ export const exportToExcel = (data: ParsedData, withProtection: boolean = true):
   
   // Write workbook
   return XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+};
+
+/**
+ * Prepare data for analytics by finding and mapping all relevant columns
+ */
+export const prepareDataForAnalytics = (data: ParsedData): ParsedData => {
+  const enhancedData: ParsedData = {
+    ...data,
+    analyticsReady: true,
+    dateColumnIndex: findDateColumn(data.headers),
+    provinceColumnIndex: findColumnIndex(data.headers, ['จังหวัด', 'province']),
+    districtColumnIndex: findColumnIndex(data.headers, ['เขต/อำเภอ', 'district']),
+    productNameColumnIndex: findColumnIndex(data.headers, ['ชื่อสินค้า', 'product name']),
+    skuColumnIndex: findColumnIndex(data.headers, ['เลขอ้างอิง SKU', 'sku']),
+    quantityColumnIndex: findColumnIndex(data.headers, ['จำนวน', 'quantity']),
+    priceColumnIndex: findColumnIndex(data.headers, ['ราคาขาย', 'price']),
+    paymentMethodColumnIndex: findColumnIndex(data.headers, ['ช่องทางการชำระเงิน', 'payment method']),
+    usernameColumnIndex: findColumnIndex(data.headers, ['ชื่อผู้ใช้', 'username']),
+    commissionColumnIndex: findColumnIndex(data.headers, ['ค่าคอมมิชชั่น', 'commission']),
+    transactionFeeColumnIndex: findColumnIndex(data.headers, ['Transaction Fee']),
+    serviceFeeColumnIndex: findColumnIndex(data.headers, ['ค่าบริการ', 'service fee']),
+    netSalePriceColumnIndex: findColumnIndex(data.headers, ['ราคาขายสุทธิ', 'net sale'])
+  };
+
+  return enhancedData;
+};
+
+/**
+ * Find date column index
+ */
+const findDateColumn = (headers: string[]): number => {
+  const dateHeaders = [
+    'วันที่ทำการสั่งซื้อ',
+    'เวลาการชำระสินค้า',
+    'วันที่',
+    'date',
+    'order date',
+    'created at',
+    'timestamp'
+  ];
+
+  for (const dateHeader of dateHeaders) {
+    const index = headers.findIndex(header => 
+      header.toLowerCase().includes(dateHeader.toLowerCase())
+    );
+    if (index !== -1) return index;
+  }
+
+  return -1;
+};
+
+/**
+ * Generic helper to find column index by search terms
+ */
+const findColumnIndex = (headers: string[], searchTerms: string[]): number => {
+  for (const term of searchTerms) {
+    const index = headers.findIndex(header => 
+      header.toLowerCase().includes(term.toLowerCase())
+    );
+    if (index !== -1) return index;
+  }
+  return -1;
 };
