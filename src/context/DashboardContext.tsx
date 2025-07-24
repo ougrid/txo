@@ -77,6 +77,169 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     percentage: 0
   });
 
+  // Helper function to aggregate analytics from multiple sources
+  const aggregateMultipleAnalytics = (analyticsArray: DashboardData[]): DashboardData => {
+    if (analyticsArray.length === 0) {
+      throw new Error('No analytics data to aggregate');
+    }
+
+    if (analyticsArray.length === 1) {
+      return analyticsArray[0];
+    }
+
+    // Combine all analytics
+    const totalRevenue = analyticsArray.reduce((sum, analytics) => sum + analytics.revenue.totalRevenue, 0);
+    const totalOrders = analyticsArray.reduce((sum, analytics) => sum + analytics.orders.totalOrders, 0);
+    const totalRecords = analyticsArray.reduce((sum, analytics) => sum + analytics.metadata.totalRecords, 0);
+
+    // Get date range
+    const startDates = analyticsArray.map(a => new Date(a.metadata.dateRange.start));
+    const endDates = analyticsArray.map(a => new Date(a.metadata.dateRange.end));
+    const earliestStart = new Date(Math.min(...startDates.map(d => d.getTime())));
+    const latestEnd = new Date(Math.max(...endDates.map(d => d.getTime())));
+
+    // Aggregate revenue by date
+    const revenueByDateMap = new Map<string, { revenue: number; orders: number }>();
+    analyticsArray.forEach(analytics => {
+      analytics.revenue.revenueByDate.forEach(item => {
+        const existing = revenueByDateMap.get(item.date) || { revenue: 0, orders: 0 };
+        revenueByDateMap.set(item.date, {
+          revenue: existing.revenue + item.revenue,
+          orders: existing.orders + item.orders
+        });
+      });
+    });
+
+    // Aggregate orders by status
+    const ordersByStatusMap = new Map<string, number>();
+    analyticsArray.forEach(analytics => {
+      Object.entries(analytics.orders.ordersByStatus).forEach(([status, count]) => {
+        ordersByStatusMap.set(status, (ordersByStatusMap.get(status) || 0) + count);
+      });
+    });
+
+    // Aggregate revenue by province
+    const revenueByProvinceMap = new Map<string, { revenue: number; orders: number }>();
+    analyticsArray.forEach(analytics => {
+      analytics.geographic.revenueByProvince.forEach(item => {
+        const existing = revenueByProvinceMap.get(item.province) || { revenue: 0, orders: 0 };
+        revenueByProvinceMap.set(item.province, {
+          revenue: existing.revenue + item.revenue,
+          orders: existing.orders + item.orders
+        });
+      });
+    });
+
+    // Create aggregated analytics object
+    const aggregated: DashboardData = {
+      revenue: {
+        totalRevenue,
+        revenueByDate: Array.from(revenueByDateMap.entries()).map(([date, data]) => ({
+          date,
+          revenue: data.revenue,
+          orders: data.orders
+        })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+        revenueByStatus: Object.fromEntries(ordersByStatusMap),
+        averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+        revenueGrowth: 0, // Would need historical data for accurate calculation
+        topRevenuedays: [], // Calculated from revenueByDate
+        monthlyRevenue: [], // Would need to group by month
+        weeklyRevenue: [] // Would need to group by week
+      },
+      orders: {
+        totalOrders,
+        ordersByStatus: Object.fromEntries(ordersByStatusMap),
+        statusDistribution: Array.from(ordersByStatusMap.entries()).map(([status, count]) => ({
+          status,
+          count,
+          percentage: totalOrders > 0 ? (count / totalOrders) * 100 : 0
+        })),
+        averageOrdersPerDay: 0, // Would need date range calculation
+        completionRate: 0, // Would need status analysis
+        cancellationRate: 0, // Would need status analysis
+        orderTrends: [] // Would need date grouping
+      },
+      geographic: {
+        revenueByProvince: Array.from(revenueByProvinceMap.entries()).map(([province, data]) => ({
+          province,
+          revenue: data.revenue,
+          orders: data.orders
+        })).sort((a, b) => b.revenue - a.revenue),
+        revenueByDistrict: [], // Would need district aggregation
+        topProvinces: [], // Derived from revenueByProvince
+        geographicDistribution: Object.fromEntries(
+          Array.from(revenueByProvinceMap.entries()).map(([province, data]) => [province, data.revenue])
+        ),
+        provinceCoverage: revenueByProvinceMap.size
+      },
+      products: {
+        topProductsByRevenue: [],
+        topProductsByQuantity: [],
+        productCategories: [],
+        averageProductPrice: 0,
+        totalUniqueProducts: 0
+      },
+      payments: {
+        revenueByPaymentMethod: [],
+        paymentMethodDistribution: {},
+        averageTransactionFeeByMethod: {},
+        paymentTrends: [],
+        preferredPaymentMethods: []
+      },
+      customers: {
+        totalUniqueCustomers: 0,
+        averageRevenuePerCustomer: 0,
+        customersByProvince: {},
+        repeatCustomers: [],
+        customerDistribution: [],
+        topCustomers: []
+      },
+      operational: {
+        totalCommissionFees: 0,
+        totalTransactionFees: 0,
+        totalServiceFees: 0,
+        averageCommissionRate: 0,
+        feesByPaymentMethod: {},
+        profitMargins: [],
+        operationalEfficiency: {
+          processingTime: 0,
+          cancellationRate: 0,
+          returnRate: 0
+        }
+      },
+      metadata: {
+        dataSource: `Aggregated from ${analyticsArray.length} datasets`,
+        lastUpdated: new Date().toISOString(),
+        dateRange: {
+          start: earliestStart.toISOString(),
+          end: latestEnd.toISOString()
+        },
+        totalRecords
+      }
+    };
+
+    return aggregated;
+  };
+
+  const updateAggregatedAnalyticsForIds = useCallback((ids: string[]) => {
+    if (ids.length === 0) {
+      setAggregatedAnalytics(null);
+      return;
+    }
+
+    const allData = getAllStoredData();
+    const selectedData = allData.filter(data => ids.includes(data.id));
+    
+    if (selectedData.length === 0) {
+      setAggregatedAnalytics(null);
+      return;
+    }
+
+    // Aggregate analytics from multiple datasets
+    const aggregated = aggregateMultipleAnalytics(selectedData.map(data => data.analytics));
+    setAggregatedAnalytics(aggregated);
+  }, []);
+
   // Load active dashboard on mount
   useEffect(() => {
     loadActiveDashboard();
@@ -276,171 +439,8 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     updateAggregatedAnalyticsForIds(activeIds);
   };
 
-  const updateAggregatedAnalyticsForIds = useCallback((ids: string[]) => {
-    if (ids.length === 0) {
-      setAggregatedAnalytics(null);
-      return;
-    }
-
-    const allData = getAllStoredData();
-    const selectedData = allData.filter(data => ids.includes(data.id));
-    
-    if (selectedData.length === 0) {
-      setAggregatedAnalytics(null);
-      return;
-    }
-
-    // Aggregate analytics from multiple datasets
-    const aggregated = aggregateMultipleAnalytics(selectedData.map(data => data.analytics));
-    setAggregatedAnalytics(aggregated);
-  }, []);
-
   const updateAggregatedAnalytics = () => {
     updateAggregatedAnalyticsForIds(selectedDatasets);
-  };
-
-  // Helper function to aggregate analytics from multiple sources
-  const aggregateMultipleAnalytics = (analyticsArray: DashboardData[]): DashboardData => {
-    if (analyticsArray.length === 0) {
-      throw new Error('No analytics data to aggregate');
-    }
-
-    if (analyticsArray.length === 1) {
-      return analyticsArray[0];
-    }
-
-    // Combine all analytics
-    const totalRevenue = analyticsArray.reduce((sum, analytics) => sum + analytics.revenue.totalRevenue, 0);
-    const totalOrders = analyticsArray.reduce((sum, analytics) => sum + analytics.orders.totalOrders, 0);
-    const totalRecords = analyticsArray.reduce((sum, analytics) => sum + analytics.metadata.totalRecords, 0);
-
-    // Get date range
-    const startDates = analyticsArray.map(a => new Date(a.metadata.dateRange.start));
-    const endDates = analyticsArray.map(a => new Date(a.metadata.dateRange.end));
-    const earliestStart = new Date(Math.min(...startDates.map(d => d.getTime())));
-    const latestEnd = new Date(Math.max(...endDates.map(d => d.getTime())));
-
-    // Aggregate revenue by date
-    const revenueByDateMap = new Map<string, { revenue: number; orders: number }>();
-    analyticsArray.forEach(analytics => {
-      analytics.revenue.revenueByDate.forEach(item => {
-        const existing = revenueByDateMap.get(item.date) || { revenue: 0, orders: 0 };
-        revenueByDateMap.set(item.date, {
-          revenue: existing.revenue + item.revenue,
-          orders: existing.orders + item.orders
-        });
-      });
-    });
-
-    // Aggregate orders by status
-    const ordersByStatusMap = new Map<string, number>();
-    analyticsArray.forEach(analytics => {
-      Object.entries(analytics.orders.ordersByStatus).forEach(([status, count]) => {
-        ordersByStatusMap.set(status, (ordersByStatusMap.get(status) || 0) + count);
-      });
-    });
-
-    // Aggregate revenue by province
-    const revenueByProvinceMap = new Map<string, { revenue: number; orders: number }>();
-    analyticsArray.forEach(analytics => {
-      analytics.geographic.revenueByProvince.forEach(item => {
-        const existing = revenueByProvinceMap.get(item.province) || { revenue: 0, orders: 0 };
-        revenueByProvinceMap.set(item.province, {
-          revenue: existing.revenue + item.revenue,
-          orders: existing.orders + item.orders
-        });
-      });
-    });
-
-    // Create aggregated analytics object
-    const aggregated: DashboardData = {
-      revenue: {
-        totalRevenue,
-        revenueByDate: Array.from(revenueByDateMap.entries()).map(([date, data]) => ({
-          date,
-          revenue: data.revenue,
-          orders: data.orders
-        })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-        revenueByStatus: Object.fromEntries(ordersByStatusMap),
-        averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
-        revenueGrowth: 0, // Would need historical data for accurate calculation
-        topRevenuedays: [], // Calculated from revenueByDate
-        monthlyRevenue: [], // Would need to group by month
-        weeklyRevenue: [] // Would need to group by week
-      },
-      orders: {
-        totalOrders,
-        ordersByStatus: Object.fromEntries(ordersByStatusMap),
-        statusDistribution: Array.from(ordersByStatusMap.entries()).map(([status, count]) => ({
-          status,
-          count,
-          percentage: totalOrders > 0 ? (count / totalOrders) * 100 : 0
-        })),
-        averageOrdersPerDay: 0, // Would need date range calculation
-        completionRate: 0, // Would need status analysis
-        cancellationRate: 0, // Would need status analysis
-        orderTrends: [] // Would need date grouping
-      },
-      geographic: {
-        revenueByProvince: Array.from(revenueByProvinceMap.entries()).map(([province, data]) => ({
-          province,
-          revenue: data.revenue,
-          orders: data.orders
-        })).sort((a, b) => b.revenue - a.revenue),
-        revenueByDistrict: [], // Would need district aggregation
-        topProvinces: [], // Derived from revenueByProvince
-        geographicDistribution: Object.fromEntries(
-          Array.from(revenueByProvinceMap.entries()).map(([province, data]) => [province, data.revenue])
-        ),
-        provinceCoverage: revenueByProvinceMap.size
-      },
-      products: {
-        topProductsByRevenue: [],
-        topProductsByQuantity: [],
-        productCategories: [],
-        averageProductPrice: 0,
-        totalUniqueProducts: 0
-      },
-      payments: {
-        revenueByPaymentMethod: [],
-        paymentMethodDistribution: {},
-        averageTransactionFeeByMethod: {},
-        paymentTrends: [],
-        preferredPaymentMethods: []
-      },
-      customers: {
-        totalUniqueCustomers: 0,
-        averageRevenuePerCustomer: 0,
-        customersByProvince: {},
-        repeatCustomers: [],
-        customerDistribution: [],
-        topCustomers: []
-      },
-      operational: {
-        totalCommissionFees: 0,
-        totalTransactionFees: 0,
-        totalServiceFees: 0,
-        averageCommissionRate: 0,
-        feesByPaymentMethod: {},
-        profitMargins: [],
-        operationalEfficiency: {
-          processingTime: 0,
-          cancellationRate: 0,
-          returnRate: 0
-        }
-      },
-      metadata: {
-        dataSource: `Aggregated from ${analyticsArray.length} datasets`,
-        lastUpdated: new Date().toISOString(),
-        dateRange: {
-          start: earliestStart.toISOString(),
-          end: latestEnd.toISOString()
-        },
-        totalRecords
-      }
-    };
-
-    return aggregated;
   };
 
   const value: DashboardContextType = {

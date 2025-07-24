@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useDashboard, useDashboardAnalytics, useIsDashboardReady } from '@/context/DashboardContext';
+import { useDashboard, useDashboardAnalytics } from '@/context/DashboardContext';
 import { DateFilter } from '@/utils/analytics/types';
 import { DateFilterUtils } from '@/utils/analytics/dateFilters';
 
@@ -14,7 +14,6 @@ export default function AnalyticsPage() {
     aggregatedAnalytics 
   } = useDashboard();
   const singleAnalytics = useDashboardAnalytics();
-  const isReady = useIsDashboardReady();
   const [selectedDateFilter, setSelectedDateFilter] = useState<DateFilter | null>(null);
 
   // Use aggregated analytics if datasets are selected, otherwise use single dashboard analytics
