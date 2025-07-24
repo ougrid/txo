@@ -212,8 +212,21 @@ export class DashboardAnalytics {
     }));
 
     // Calculate rates
-    const completedOrders = ordersByStatus['สำเร็จแล้ว'] || 0;
-    const cancelledOrders = ordersByStatus['ยกเลิกแล้ว'] || 0;
+    const cancelledStatusKeys = ['ยกเลิกแล้ว', 'cancelled', 'canceled', 'rejected'];
+    const completedStatusKeys = ['สำเร็จแล้ว', 'completed', 'success', 'delivered'];
+    const shippingStatusKeys = ['ที่ต้องจัดส่ง', 'รอการจัดส่ง', 'shipping', 'to_ship'];
+    
+    const completedOrders = Object.entries(ordersByStatus).reduce((sum, [status, count]) => {
+      const isCompleted = completedStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase())) ||
+                         shippingStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase()));
+      return isCompleted ? sum + count : sum;
+    }, 0);
+    
+    const cancelledOrders = Object.entries(ordersByStatus).reduce((sum, [status, count]) => {
+      const isCancelled = cancelledStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase()));
+      return isCancelled ? sum + count : sum;
+    }, 0);
+    
     const completionRate = totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
     const cancellationRate = totalOrders > 0 ? (cancelledOrders / totalOrders) * 100 : 0;
 

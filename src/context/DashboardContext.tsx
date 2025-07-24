@@ -117,6 +117,14 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       });
     });
 
+    // Aggregate revenue by status
+    const revenueByStatusMap = new Map<string, number>();
+    analyticsArray.forEach(analytics => {
+      Object.entries(analytics.revenue.revenueByStatus).forEach(([status, revenue]) => {
+        revenueByStatusMap.set(status, (revenueByStatusMap.get(status) || 0) + revenue);
+      });
+    });
+
     // Aggregate revenue by province
     const revenueByProvinceMap = new Map<string, { revenue: number; orders: number }>();
     analyticsArray.forEach(analytics => {
@@ -142,17 +150,23 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     });
 
     // Calculate completion rate from order status
-    const completedStatusKeys = ['สำเร็จแล้ว', 'completed', 'success', 'delivered'];
-    const completedOrders = Array.from(ordersByStatusMap.entries())
-      .filter(([status]) => completedStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase())))
-      .reduce((sum, [, count]) => sum + count, 0);
-    const completionRate = totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
-
-    // Calculate cancellation rate from order status
+    // Use the same logic as individual analytics for consistency
     const cancelledStatusKeys = ['ยกเลิกแล้ว', 'cancelled', 'canceled', 'rejected'];
-    const cancelledOrders = Array.from(ordersByStatusMap.entries())
-      .filter(([status]) => cancelledStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase())))
-      .reduce((sum, [, count]) => sum + count, 0);
+    const completedStatusKeys = ['สำเร็จแล้ว', 'completed', 'success', 'delivered'];
+    const shippingStatusKeys = ['ที่ต้องจัดส่ง', 'รอการจัดส่ง', 'shipping', 'to_ship'];
+    
+    const completedOrders = Array.from(ordersByStatusMap.entries()).reduce((sum, [status, count]) => {
+      const isCompleted = completedStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase())) ||
+                         shippingStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase()));
+      return isCompleted ? sum + count : sum;
+    }, 0);
+    
+    const cancelledOrders = Array.from(ordersByStatusMap.entries()).reduce((sum, [status, count]) => {
+      const isCancelled = cancelledStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase()));
+      return isCancelled ? sum + count : sum;
+    }, 0);
+    
+    const completionRate = totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
     const cancellationRate = totalOrders > 0 ? (cancelledOrders / totalOrders) * 100 : 0;
 
     // Create aggregated analytics object
@@ -164,10 +178,14 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
           revenue: data.revenue,
           orders: data.orders
         })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-        revenueByStatus: Object.fromEntries(ordersByStatusMap),
+        revenueByStatus: Object.fromEntries(revenueByStatusMap),
         averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
         revenueGrowth: 0, // Would need historical data for accurate calculation
-        topRevenuedays: [], // Calculated from revenueByDate
+        topRevenuedays: Array.from(revenueByDateMap.entries()).map(([date, data]) => ({
+          date,
+          revenue: data.revenue,
+          orders: data.orders
+        })).sort((a, b) => b.revenue - a.revenue).slice(0, 5),
         monthlyRevenue: [], // Would need to group by month
         weeklyRevenue: [] // Would need to group by week
       },
