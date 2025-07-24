@@ -127,7 +127,7 @@ export default function DataManagementPage() {
                 Upload your first dataset to start analyzing your sales data.
               </p>
               <a
-                href="/forms/file-upload"
+                href="/file-upload"
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Upload Data
@@ -215,7 +215,7 @@ export default function DataManagementPage() {
         {/* Quick Actions */}
         <div className="mt-8 flex justify-center space-x-4">
           <a
-            href="/forms/file-upload"
+            href="/file-upload"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             📁 Upload New Dataset
