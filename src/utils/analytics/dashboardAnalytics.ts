@@ -54,6 +54,7 @@ export class DashboardAnalytics {
    */
   private static generateRevenueAnalytics(data: ParsedData): RevenueAnalytics {
     const revenueColumnIndex = this.findColumnIndex(data.headers, ['รายรับจากคำสั่งซื้อ', 'revenue']);
+    const netSalePriceIndex = this.findColumnIndex(data.headers, ['ราคาขายสุทธิ', 'net_sale_price']);
     const statusColumnIndex = data.statusColumnIndex ?? -1;
     const dateColumnIndex = DateFilterUtils.findDateColumn(data.headers);
 
@@ -66,39 +67,60 @@ export class DashboardAnalytics {
 
     data.rows.forEach(row => {
       const revenue = this.parseNumber(row[revenueColumnIndex]);
+      const netSalePrice = this.parseNumber(row[netSalePriceIndex]);
       const status = statusColumnIndex >= 0 ? String(row[statusColumnIndex] || '') : '';
       
-      if (revenue > 0) {
+      // Define status types
+      const cancelledStatusKeys = ['ยกเลิกแล้ว', 'cancelled', 'canceled', 'rejected'];
+      const completedStatusKeys = ['สำเร็จแล้ว', 'completed', 'success', 'delivered'];
+      const shippingStatusKeys = ['ที่ต้องจัดส่ง', 'รอการจัดส่ง', 'shipping', 'to_ship'];
+      
+      const isCancelled = cancelledStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase()));
+      const isCompletedOrShipping = 
+        completedStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase())) ||
+        shippingStatusKeys.some(key => status.toLowerCase().includes(key.toLowerCase()));
+      
+      // Total Revenue: Only from completed/shipping orders (รายรับจากคำสั่งซื้อ)
+      // Cancelled orders have 0 รายรับจากคำสั่งซื้อ, so they don't contribute to total
+      if (isCompletedOrShipping && revenue > 0) {
         totalRevenue += revenue;
-        
-        // Revenue by status
-        if (status) {
+      }
+      
+      // Revenue by Status: 
+      // - Completed/Shipping: Show actual รายรับจากคำสั่งซื้อ (positive)
+      // - Cancelled: Show negative ราคาขายสุทธิ (lost potential revenue)
+      if (status) {
+        if (isCancelled) {
+          // For cancelled orders, show negative net sale price (lost potential)
+          revenueByStatus[status] = (revenueByStatus[status] || 0) - Math.abs(netSalePrice);
+        } else if (isCompletedOrShipping && revenue > 0) {
+          // For completed/shipping orders, show actual escrowed revenue
           revenueByStatus[status] = (revenueByStatus[status] || 0) + revenue;
         }
+      }
 
-        // Revenue by date
-        if (dateColumnIndex >= 0) {
-          const dateValue = row[dateColumnIndex];
-          if (dateValue) {
-            const parsedDate = DateFilterUtils.parseDate(String(dateValue));
-            if (parsedDate) {
-              const dateKey = parsedDate.toISOString().split('T')[0];
-              const existing = revenueByDate.get(dateKey) || { revenue: 0, orders: 0 };
-              revenueByDate.set(dateKey, {
-                revenue: existing.revenue + revenue,
-                orders: existing.orders + 1
-              });
+      // Revenue by date: Only include completed/shipping orders for date analytics
+      if (isCompletedOrShipping && revenue > 0 && dateColumnIndex >= 0) {
+        const dateValue = row[dateColumnIndex];
+        if (dateValue) {
+          const parsedDate = DateFilterUtils.parseDate(String(dateValue));
+          if (parsedDate) {
+            const dateKey = parsedDate.toISOString().split('T')[0];
+            const existing = revenueByDate.get(dateKey) || { revenue: 0, orders: 0 };
+            revenueByDate.set(dateKey, {
+              revenue: existing.revenue + revenue,
+              orders: existing.orders + 1
+            });
 
-              // Monthly revenue
-              const monthKey = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}`;
-              monthlyRevenue.set(monthKey, (monthlyRevenue.get(monthKey) || 0) + revenue);
+            // Monthly revenue
+            const monthKey = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}`;
+            monthlyRevenue.set(monthKey, (monthlyRevenue.get(monthKey) || 0) + revenue);
 
-              // Weekly revenue
-              const weekStart = new Date(parsedDate);
-              weekStart.setDate(parsedDate.getDate() - parsedDate.getDay());
-              const weekKey = weekStart.toISOString().split('T')[0];
-              weeklyRevenue.set(weekKey, (weeklyRevenue.get(weekKey) || 0) + revenue);
-            }
+            // Weekly revenue
+            const weekStart = new Date(parsedDate);
+            weekStart.setDate(parsedDate.getDate() - parsedDate.getDay());
+            const weekKey = weekStart.toISOString().split('T')[0];
+            weeklyRevenue.set(weekKey, (weeklyRevenue.get(weekKey) || 0) + revenue);
           }
         }
       }
