@@ -127,11 +127,16 @@ export class AuthService {
   }
 
   /**
-   * Save session to storage
+   * Save session to storage and set cookie for server-side access
    */
   private static saveSession(session: AuthSession): void {
     try {
+      // Save to localStorage for client-side access
       localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+      
+      // Set cookie for server-side middleware access
+      const expirationDate = new Date(session.expiresAt);
+      document.cookie = `${STORAGE_KEY}=${session.accessToken}; expires=${expirationDate.toUTCString()}; path=/; SameSite=Lax`;
     } catch (error) {
       console.error('Failed to save session:', error);
       throw new Error('Failed to save session');
@@ -163,11 +168,15 @@ export class AuthService {
   }
 
   /**
-   * Clear session from storage
+   * Clear session from storage and remove cookie
    */
   static clearSession(): void {
     try {
+      // Clear localStorage
       localStorage.removeItem(STORAGE_KEY);
+      
+      // Clear cookie by setting it to expire immediately
+      document.cookie = `${STORAGE_KEY}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
     } catch (error) {
       console.error('Failed to clear session:', error);
     }
