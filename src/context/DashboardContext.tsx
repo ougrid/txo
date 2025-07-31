@@ -75,6 +75,12 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     available: 0,
     percentage: 0
   });
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Only run on client side
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Helper function to aggregate analytics from multiple sources
   const aggregateMultipleAnalytics = (analyticsArray: DashboardData[]): DashboardData => {
@@ -280,6 +286,20 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     return aggregated;
   };
 
+  // Helper function to get all stored data
+  const getAllStoredData = useCallback((): StoredDashboardData[] => {
+    if (!isMounted) {
+      return [];
+    }
+    
+    try {
+      return DashboardStorage.getAllDashboardData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to retrieve stored data');
+      return [];
+    }
+  }, [isMounted]);
+
   const updateAggregatedAnalyticsForIds = useCallback((ids: string[]) => {
     if (ids.length === 0) {
       setAggregatedAnalytics(null);
@@ -297,9 +317,11 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     // Aggregate analytics from multiple datasets
     const aggregated = aggregateMultipleAnalytics(selectedData.map(data => data.analytics));
     setAggregatedAnalytics(aggregated);
-  }, []);
+  }, [getAllStoredData]);
 
   const loadPrimaryDashboard = useCallback(async () => {
+    if (!isMounted) return;
+    
     try {
       setIsLoading(true);
       const primaryData = DashboardStorage.getPrimaryDashboardData();
@@ -316,15 +338,24 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [updateAggregatedAnalyticsForIds]);
+  }, [updateAggregatedAnalyticsForIds, isMounted]);
 
-  const updateStorageInfo = () => {
-    const info = DashboardStorage.getStorageInfo();
-    setStorageInfo(info);
-  };
+  const updateStorageInfo = useCallback(() => {
+    if (!isMounted) return;
+    
+    try {
+      const info = DashboardStorage.getStorageInfo();
+      setStorageInfo(info);
+    } catch (err) {
+      console.error('Failed to update storage info:', err);
+      // Don't set error for storage info failures
+    }
+  }, [isMounted]);
 
   // Load primary dashboard on mount (first selected dataset)
   useEffect(() => {
+    if (!isMounted) return;
+    
     loadPrimaryDashboard();
     updateStorageInfo();
     
@@ -338,7 +369,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [loadPrimaryDashboard]);
+  }, [loadPrimaryDashboard, updateStorageInfo, isMounted]);
 
   // Auto-update aggregated analytics when selection changes
   useEffect(() => {
@@ -354,7 +385,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       setAggregatedAnalytics(null);
       setPrimaryDashboardState(null);
     }
-  }, [selectedDatasets, updateAggregatedAnalyticsForIds]);
+  }, [selectedDatasets, updateAggregatedAnalyticsForIds, getAllStoredData]);
 
   const setPrimaryDashboard = (data: StoredDashboardData) => {
     setPrimaryDashboardState(data);
@@ -364,6 +395,10 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     parsedData: ParsedData, 
     fileName: string
   ): Promise<{ success: boolean; id?: string; error?: string }> => {
+    if (!isMounted) {
+      return { success: false, error: 'Not mounted' };
+    }
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -449,21 +484,14 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     }
   };
 
-  const getAllStoredData = (): StoredDashboardData[] => {
-    try {
-      return DashboardStorage.getAllDashboardData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to retrieve stored data');
-      return [];
-    }
-  };
-
   const clearError = () => {
     setError(null);
   };
 
   // Multi-selection functions
   const selectDataset = (id: string) => {
+    if (!isMounted) return;
+    
     const newSelection = selectedDatasets.includes(id) 
       ? selectedDatasets 
       : [...selectedDatasets, id];
@@ -473,12 +501,16 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   };
 
   const deselectDataset = (id: string) => {
+    if (!isMounted) return;
+    
     const newSelection = selectedDatasets.filter(selectedId => selectedId !== id);
     setSelectedDatasets(newSelection);
     DashboardStorage.setSelectedDatasetIds(newSelection);
   };
 
   const selectAllDatasets = () => {
+    if (!isMounted) return;
+    
     const allData = getAllStoredData();
     const allIds = allData.map(data => data.id);
     setSelectedDatasets(allIds);
@@ -486,6 +518,8 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   };
 
   const deselectAllDatasets = () => {
+    if (!isMounted) return;
+    
     setSelectedDatasets([]);
     DashboardStorage.setSelectedDatasetIds([]);
   };

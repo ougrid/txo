@@ -5,10 +5,34 @@ const SELECTED_DATA_KEY = 'miniseller_selected_datasets';
 
 export class DashboardStorage {
   /**
+   * Check if localStorage is available and we're in browser environment
+   */
+  static isAvailable(): boolean {
+    try {
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined') {
+        return false;
+      }
+      
+      const test = '__localStorage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Save dashboard data to localStorage
    */
   static saveDashboardData(data: StoredDashboardData): void {
     try {
+      if (!this.isAvailable()) {
+        console.warn('localStorage is not available');
+        return;
+      }
+      
       const existingData = this.getAllDashboardData();
       
       // Add new data as selected by default
@@ -32,10 +56,14 @@ export class DashboardStorage {
   }
 
   /**
-   * Get all stored dashboard data
+   * Get all dashboard data from localStorage
    */
   static getAllDashboardData(): StoredDashboardData[] {
     try {
+      if (!this.isAvailable()) {
+        return [];
+      }
+      
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
@@ -49,6 +77,10 @@ export class DashboardStorage {
    */
   static getSelectedDatasetIds(): string[] {
     try {
+      if (!this.isAvailable()) {
+        return [];
+      }
+      
       const stored = localStorage.getItem(SELECTED_DATA_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
@@ -62,9 +94,14 @@ export class DashboardStorage {
    */
   static setSelectedDatasetIds(ids: string[]): void {
     try {
+      if (!this.isAvailable()) {
+        console.warn('localStorage is not available');
+        return;
+      }
+      
       localStorage.setItem(SELECTED_DATA_KEY, JSON.stringify(ids));
       
-      // Update isSelected flag on all datasets
+      // Update isSelected flag in stored data
       const allData = this.getAllDashboardData();
       const updatedData = allData.map(item => ({
         ...item,
@@ -78,15 +115,30 @@ export class DashboardStorage {
   }
 
   /**
-   * Get first selected dashboard data (for backward compatibility)
+   * Get specific dashboard data by ID
+   */
+  static getDashboardData(id: string): StoredDashboardData | null {
+    try {
+      const allData = this.getAllDashboardData();
+      return allData.find(item => item.id === id) || null;
+    } catch (error) {
+      console.error('Failed to retrieve specific dashboard data:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get primary dashboard data (first available or most recently added)
    */
   static getPrimaryDashboardData(): StoredDashboardData | null {
     try {
-      const selectedIds = this.getSelectedDatasetIds();
-      if (selectedIds.length === 0) return null;
-      
       const allData = this.getAllDashboardData();
-      return allData.find(item => item.id === selectedIds[0]) || null;
+      if (allData.length === 0) {
+        return null;
+      }
+      
+      // Return the most recently added data (last in array)
+      return allData[allData.length - 1];
     } catch (error) {
       console.error('Failed to retrieve primary dashboard data:', error);
       return null;
@@ -94,30 +146,55 @@ export class DashboardStorage {
   }
 
   /**
-   * Get all selected dashboard data
+   * Update specific dashboard data
    */
-  static getSelectedDashboardData(): StoredDashboardData[] {
+  static updateDashboardData(id: string, updates: Partial<StoredDashboardData>): boolean {
     try {
-      const selectedIds = this.getSelectedDatasetIds();
+      if (!this.isAvailable()) {
+        console.warn('localStorage is not available');
+        return false;
+      }
+      
       const allData = this.getAllDashboardData();
-      return allData.filter(item => selectedIds.includes(item.id));
+      const index = allData.findIndex(item => item.id === id);
+      
+      if (index === -1) {
+        console.error('Dashboard data not found:', id);
+        return false;
+      }
+      
+      allData[index] = { ...allData[index], ...updates };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+      
+      console.log('Dashboard data updated successfully:', id);
+      return true;
     } catch (error) {
-      console.error('Failed to retrieve selected dashboard data:', error);
-      return [];
+      console.error('Failed to update dashboard data:', error);
+      return false;
     }
   }
 
   /**
-   * Delete dashboard data by ID
+   * Delete specific dashboard data
    */
   static deleteDashboardData(id: string): boolean {
     try {
-      const existingData = this.getAllDashboardData();
-      const filteredData = existingData.filter(item => item.id !== id);
+      if (!this.isAvailable()) {
+        console.warn('localStorage is not available');
+        return false;
+      }
+      
+      const allData = this.getAllDashboardData();
+      const filteredData = allData.filter(item => item.id !== id);
+      
+      if (allData.length === filteredData.length) {
+        console.error('Dashboard data not found for deletion:', id);
+        return false;
+      }
       
       localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredData));
       
-      // Remove from selected datasets if it was selected
+      // Also remove from selected datasets
       const selectedIds = this.getSelectedDatasetIds();
       const updatedSelectedIds = selectedIds.filter(selectedId => selectedId !== id);
       this.setSelectedDatasetIds(updatedSelectedIds);
@@ -135,6 +212,11 @@ export class DashboardStorage {
    */
   static clearAllData(): void {
     try {
+      if (!this.isAvailable()) {
+        console.warn('localStorage is not available');
+        return;
+      }
+      
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(SELECTED_DATA_KEY);
       console.log('All dashboard data cleared');
@@ -148,20 +230,20 @@ export class DashboardStorage {
    */
   static getStorageInfo(): { used: number; available: number; percentage: number } {
     try {
+      if (!this.isAvailable()) {
+        return { used: 0, available: 0, percentage: 0 };
+      }
+      
       const data = localStorage.getItem(STORAGE_KEY) || '';
       const selectedData = localStorage.getItem(SELECTED_DATA_KEY) || '';
-      const used = new Blob([data + selectedData]).size;
+      const used = (data.length + selectedData.length) * 2; // UTF-16 encoding
       
       // Estimate available space (localStorage is typically 5-10MB)
-      const estimated = 5 * 1024 * 1024; // 5MB
-      const available = Math.max(0, estimated - used);
-      const percentage = (used / estimated) * 100;
+      const total = 5 * 1024 * 1024; // 5MB estimate
+      const available = total - used;
+      const percentage = total > 0 ? (used / total) * 100 : 0;
       
-      return {
-        used,
-        available,
-        percentage
-      };
+      return { used, available, percentage };
     } catch (error) {
       console.error('Failed to get storage info:', error);
       return { used: 0, available: 0, percentage: 0 };
@@ -169,16 +251,12 @@ export class DashboardStorage {
   }
 
   /**
-   * Check if localStorage is available
+   * Check if storage has enough space for new data
    */
-  static isAvailable(): boolean {
-    try {
-      const test = '__localStorage_test__';
-      localStorage.setItem(test, test);
-      localStorage.removeItem(test);
-      return true;
-    } catch {
-      return false;
-    }
+  static hasSpaceForData(dataSize: number): boolean {
+    const info = this.getStorageInfo();
+    return info.available > dataSize * 2; // Buffer for safety
   }
 }
+
+export default DashboardStorage;
