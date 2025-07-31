@@ -111,6 +111,115 @@ export class AuthService {
   }
 
   /**
+   * Initialize mock users for development/demo purposes
+   */
+  private static async initializeMockUsers(): Promise<void> {
+    const existingUsers = this.getStoredUsers();
+    
+    // Only initialize if no users exist
+    if (existingUsers.length > 0) {
+      return;
+    }
+
+    console.log('Initializing mock users for development...');
+
+    const mockUsers = [
+      {
+        id: 'user_admin_001',
+        email: 'admin@miniseller.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        phone: '+66 123-456-7890',
+        bio: 'MiniSeller platform administrator with full access to all features and analytics.',
+        socialLinks: {
+          facebook: 'https://facebook.com/miniseller',
+          twitter: 'https://twitter.com/miniseller',
+          linkedin: 'https://linkedin.com/company/miniseller'
+        },
+        createdAt: new Date('2024-01-01').toISOString(),
+        lastLoginAt: new Date().toISOString(),
+        passwordHash: await this.hashPassword('Admin123!')
+      },
+      {
+        id: 'user_demo_002',
+        email: 'demo@shopowner.com',
+        firstName: 'Somchai',
+        lastName: 'Merchant',
+        phone: '+66 987-654-3210',
+        bio: 'Thai e-commerce shop owner specializing in fashion and accessories. Managing multiple platforms including Shopee and Lazada.',
+        socialLinks: {
+          facebook: 'https://facebook.com/somchaishop',
+          instagram: 'https://instagram.com/somchaifashion'
+        },
+        createdAt: new Date('2024-02-15').toISOString(),
+        lastLoginAt: new Date().toISOString(),
+        passwordHash: await this.hashPassword('Demo123!')
+      },
+      {
+        id: 'user_seller_003',
+        email: 'seller@thaistore.co.th',
+        firstName: 'Malee',
+        lastName: 'Entrepreneur',
+        phone: '+66 555-123-456',
+        bio: 'Electronics and gadgets seller with 5+ years experience in Thai e-commerce. Focus on revenue optimization and customer analytics.',
+        socialLinks: {
+          linkedin: 'https://linkedin.com/in/malee-entrepreneur',
+          facebook: 'https://facebook.com/thaielectronics'
+        },
+        createdAt: new Date('2024-03-10').toISOString(),
+        lastLoginAt: new Date().toISOString(),
+        passwordHash: await this.hashPassword('Seller123!')
+      },
+      {
+        id: 'user_analyst_004',
+        email: 'analyst@datacorp.th',
+        firstName: 'Krit',
+        lastName: 'Analyzer',
+        phone: '+66 444-567-890',
+        bio: 'Data analyst helping Thai e-commerce businesses optimize their operations through advanced analytics and insights.',
+        socialLinks: {
+          linkedin: 'https://linkedin.com/in/krit-analyzer',
+          twitter: 'https://twitter.com/kritdata'
+        },
+        createdAt: new Date('2024-04-20').toISOString(),
+        lastLoginAt: new Date().toISOString(),
+        passwordHash: await this.hashPassword('Analyst123!')
+      }
+    ];
+
+    this.saveUsers(mockUsers);
+    console.log('Mock users initialized successfully');
+  }
+
+  /**
+   * Get mock user credentials for easy testing
+   */
+  static getMockUserCredentials(): Array<{ email: string; password: string; role: string }> {
+    return [
+      {
+        email: 'admin@miniseller.com',
+        password: 'Admin123!',
+        role: 'Administrator'
+      },
+      {
+        email: 'demo@shopowner.com',
+        password: 'Demo123!',
+        role: 'Shop Owner'
+      },
+      {
+        email: 'seller@thaistore.co.th',
+        password: 'Seller123!',
+        role: 'Seller'
+      },
+      {
+        email: 'analyst@datacorp.th',
+        password: 'Analyst123!',
+        role: 'Data Analyst'
+      }
+    ];
+  }
+
+  /**
    * Create authentication session
    */
   private static createSession(user: User, rememberMe: boolean = false): AuthSession {
@@ -276,6 +385,9 @@ export class AuthService {
    */
   static async login(credentials: LoginCredentials): Promise<{ success: boolean; error?: AuthError; session?: AuthSession }> {
     try {
+      // Initialize mock users if none exist (for development/demo)
+      await this.initializeMockUsers();
+
       const { email, password, rememberMe = false } = credentials;
 
       // Validation

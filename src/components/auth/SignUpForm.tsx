@@ -3,6 +3,7 @@ import Checkbox from "@/components/form/input/Checkbox";
 import Label from "@/components/form/Label";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import { useAuth } from "@/context/AuthContext";
+import MockCredentialsHelper from "@/components/auth/MockCredentialsHelper";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -62,7 +63,10 @@ export default function SignUpForm() {
   const displayError = formError || error;
 
   return (
-    <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
+    <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar relative">
+      {/* Mock Credentials Helper for Development */}
+      <MockCredentialsHelper />
+      
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
         <Link
           href="/"
