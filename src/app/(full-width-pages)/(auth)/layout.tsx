@@ -34,7 +34,10 @@ export default function AuthLayout({
                     />
                   </Link>
                   <p className="text-center text-gray-400 dark:text-white/60">
-                    Free and Open-Source Tailwind CSS Admin Dashboard Template
+                    Comprehensive Thai E-commerce Analytics Platform
+                  </p>
+                  <p className="text-center text-gray-500 dark:text-white/40 text-sm mt-2">
+                    Process order data, calculate revenue, and generate business insights
                   </p>
                 </div>
               </div>

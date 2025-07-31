@@ -323,14 +323,14 @@ const AppSidebar: React.FC = () => {
               <Image
                 className="dark:hidden"
                 src="/images/logo/miniseller-logo-bg-removed-908x404.png"
-                alt="Logo"
+                alt="MiniSeller - Thai E-commerce Analytics Platform"
                 width={150}
                 height={67}
               />
               <Image
                 className="hidden dark:block"
                 src="/images/logo/miniseller-logo-bg-removed-908x404.png"
-                alt="Logo"
+                alt="MiniSeller - Thai E-commerce Analytics Platform"
                 width={150}
                 height={67}
               />
@@ -338,7 +338,7 @@ const AppSidebar: React.FC = () => {
           ) : (
             <Image
               src="/images/logo/miniseller-logo-bg-removed-908x404.png"
-              alt="Logo"
+              alt="MiniSeller"
               width={32}
               height={14}
             />
