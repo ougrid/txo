@@ -37,3 +37,4 @@ Further implement the following features from the README.md file
   - <!> show "last update" datetime from each shop
   - <!> show orders of finished scanning orders, and orders to scanned from shopee
 - feat: show orders that are being scanned and orders that are finished scanning
+- feat: example Excel order files for user to download and test upload to the system
