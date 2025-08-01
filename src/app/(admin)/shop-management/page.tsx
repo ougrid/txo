@@ -18,6 +18,9 @@ export default function ShopManagementPage() {
   const [scanMessage, setScanMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'orders'>('overview');
+  const [highlightScanner, setHighlightScanner] = useState(false);
+  const [highlightOrdersTab, setHighlightOrdersTab] = useState(false);
+  const [highlightPendingScans, setHighlightPendingScans] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -32,6 +35,71 @@ export default function ShopManagementPage() {
       setFilteredShops(shops.filter(shop => shop.platform === selectedPlatform));
     }
   }, [shops, selectedPlatform]);
+
+  // Handle hash navigation for barcode scanner and pending scans
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === '#barcode-scanner') {
+      // Ensure we're on the overview tab first
+      setActiveTab('overview');
+      
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        const element = document.getElementById('barcode-scanner');
+        if (element) {
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+          
+          // Highlight the scanner for 3 seconds
+          setHighlightScanner(true);
+          setTimeout(() => setHighlightScanner(false), 3000);
+        }
+      }, 100);
+    } else if (hash === '#pending-scans') {
+      // Step 3 complex flow: switch to orders tab, then highlight pending scans
+      setTimeout(() => {
+        // Scroll to the top of the page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Wait 0.5 second after scrolling
+        setTimeout(() => {
+          // Start highlighting orders tab
+          setHighlightOrdersTab(true);
+          
+          // Switch to orders tab after 2 seconds (while highlighting is still active)
+          setTimeout(() => {
+            setActiveTab('orders');
+            
+            // Wait for tab transition (300ms), then end tab highlighting
+            setTimeout(() => {
+              setHighlightOrdersTab(false);
+              
+              // Wait 1 second after tab highlighting is done
+              setTimeout(() => {
+                // Scroll to pending scans section and highlight it
+                const pendingScansElement = document.getElementById('pending-scans');
+                if (pendingScansElement) {
+                  const elementTop = pendingScansElement.getBoundingClientRect().top + window.pageYOffset;
+                  const offsetPosition = elementTop - 100; // Scroll to 100px above the element
+                  
+                  window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                  });
+                }
+                
+                // Start highlighting pending scans
+                setHighlightPendingScans(true);
+                setTimeout(() => setHighlightPendingScans(false), 3000);
+              }, 1000);
+            }, 300);
+          }, 2000);
+        }, 500);
+      }, 100);
+    }
+  }, []);
 
   const loadData = () => {
     setIsLoading(true);
@@ -109,6 +177,35 @@ export default function ShopManagementPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes subtleBounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-6px);
+          }
+        }
+        @keyframes subtlePulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.6;
+          }
+        }
+        .highlight-scanner {
+          animation: subtlePulse 2s ease-in-out infinite, subtleBounce 2s ease-in-out infinite;
+        }
+        .highlight-orders-tab {
+          animation: subtlePulse 2s ease-in-out infinite, subtleBounce 2s ease-in-out infinite;
+        }
+        .highlight-pending-scans {
+          animation: subtlePulse 2s ease-in-out infinite, subtleBounce 2s ease-in-out infinite;
+        }
+        `
+      }} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -136,6 +233,8 @@ export default function ShopManagementPage() {
                     activeTab === 'orders'
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
+                  } ${
+                    highlightOrdersTab ? 'ring-2 ring-blue-500 ring-opacity-50 bg-blue-50 highlight-orders-tab' : ''
                   }`}
                 >
                   Orders
@@ -233,11 +332,13 @@ export default function ShopManagementPage() {
             </div>
 
             {/* Barcode Scanner Section */}
-            <div className="xl:col-span-1">
+            <div id="barcode-scanner" className="xl:col-span-1 scroll-mt-20">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Scanner</h2>
               <BarcodeScanner 
                 onScanComplete={handleScanComplete}
-                className="sticky top-6"
+                className={`sticky top-6 transition-all duration-1000 ${
+                  highlightScanner ? 'ring-4 ring-blue-500 ring-opacity-50 bg-blue-50 rounded-lg highlight-scanner' : ''
+                }`}
               />
             </div>
           </div>
@@ -245,7 +346,12 @@ export default function ShopManagementPage() {
           /* Orders Tab */
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             {/* Pending Orders */}
-            <div className="xl:col-span-2">
+            <div 
+              id="pending-scans"
+              className={`xl:col-span-2 transition-all duration-1000 ${
+                highlightPendingScans ? 'ring-4 ring-blue-500 ring-opacity-50 bg-blue-50 rounded-lg p-4 -m-4 highlight-pending-scans' : ''
+              }`}
+            >
               <OrderList
                 orders={getPendingOrders()}
                 title="Pending Scans"

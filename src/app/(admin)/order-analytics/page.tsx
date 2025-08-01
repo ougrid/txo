@@ -13,6 +13,25 @@ export default function OrderAnalyticsPage() {
   const [selectedStatus, setSelectedStatus] = useState<Order['status'] | 'all'>('all');
   const [selectedShop, setSelectedShop] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [highlightExport, setHighlightExport] = useState(false);
+
+  // Handle hash navigation for export options
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === '#export-options') {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        const exportSection = document.getElementById('export-options');
+        if (exportSection) {
+          exportSection.scrollIntoView({ behavior: 'smooth', block: 'start'});
+          
+          // Highlight the export section for 3 seconds
+          setHighlightExport(true);
+          setTimeout(() => setHighlightExport(false), 3000);
+        }
+      }, 100);
+    }
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -86,6 +105,29 @@ export default function OrderAnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes subtleBounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-6px);
+          }
+        }
+        @keyframes subtlePulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.6;
+          }
+        }
+        .highlight-export {
+          animation: subtlePulse 2s ease-in-out infinite, subtleBounce 2s ease-in-out infinite;
+        }
+        `
+      }} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -237,8 +279,14 @@ export default function OrderAnalyticsPage() {
 
         {/* Export Actions */}
         {filteredOrders.length > 0 && (
-          <div className="mt-8 bg-white rounded-lg border border-gray-200 p-6">
+          <div 
+            id="export-options"
+            className={`mt-8 bg-white rounded-lg border border-gray-200 p-6 transition-all duration-1000 ${
+              highlightExport ? 'ring-4 ring-blue-500 ring-opacity-50 bg-blue-50 rounded-lg highlight-export' : ''
+            }`}
+          >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Export Options</h3>
+            <p className="text-sm text-gray-600 mb-4">Export data for RPA automation into your ERP system.</p>
             <div className="flex space-x-4">
               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 Export to CSV
