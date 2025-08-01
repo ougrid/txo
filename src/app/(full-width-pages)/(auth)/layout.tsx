@@ -27,10 +27,10 @@ export default function AuthLayout({
                 <div className="flex flex-col items-center max-w-xs">
                   <Link href="/" className="block mb-4">
                     <Image
-                      width={231}
-                      height={48}
-                      src="./images/logo/auth-logo.svg"
-                      alt="Logo"
+                      width={227}
+                      height={101}
+                      src="/images/logo/miniseller-logo-bg-removed-908x404.png"
+                      alt="MiniSeller - Thai E-commerce Analytics Platform"
                     />
                   </Link>
                   <p className="text-center text-gray-400 dark:text-white/60">

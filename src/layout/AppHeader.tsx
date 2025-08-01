@@ -1,5 +1,6 @@
 "use client";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
+import WorkflowTrigger from "@/components/common/WorkflowTrigger";
 import NotificationDropdown from "@/components/header/NotificationDropdown";
 import UserDropdown from "@/components/header/UserDropdown";
 import { useSidebar } from "@/context/SidebarContext";
@@ -164,6 +165,10 @@ const AppHeader: React.FC = () => {
             {/* <!-- Dark Mode Toggler --> */}
             <ThemeToggleButton />
             {/* <!-- Dark Mode Toggler --> */}
+
+            {/* <!-- Workflow Trigger --> */}
+            <WorkflowTrigger variant="icon" size="sm" />
+            {/* <!-- Workflow Trigger --> */}
 
            <NotificationDropdown /> 
             {/* <!-- Notification Menu Area --> */}

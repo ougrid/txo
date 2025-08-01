@@ -8,9 +8,12 @@ const protectedRoutes = [
   '/profile',
   '/file-upload',
   '/calendar',
+  '/shop-management',
+  '/platform-management',
+  '/order-analytics',
 ];
 
-// Define public routes that should redirect to dashboard if authenticated
+// Define public routes that should redirect to how-it-works if authenticated
 const authRoutes = [
   '/signin',
   '/signup',
@@ -18,6 +21,11 @@ const authRoutes = [
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  
+  // Handle admin root redirect - redirect to how-it-works
+  if (pathname === '/admin' || pathname === '/admin/') {
+    return NextResponse.redirect(new URL('/how-it-works', request.url));
+  }
   
   // Get session token from cookies or localStorage (we'll check both)
   const sessionCookie = request.cookies.get('miniseller_auth_session');
@@ -43,9 +51,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Handle auth routes (redirect to dashboard if already authenticated)
+  // Handle auth routes (redirect to how-it-works if already authenticated)
   if (isAuthRoute && isAuthenticated) {
-    const redirectUrl = request.nextUrl.searchParams.get('redirect') || '/dashboard/analytics';
+    const redirectUrl = request.nextUrl.searchParams.get('redirect') || '/how-it-works';
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
