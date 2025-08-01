@@ -29,8 +29,8 @@ export default function AuthLayout({
                     <Image
                       width={227}
                       height={101}
-                      src="./images/logo/miniseller-logo-bg-removed-908x404.png"
-                      alt="Logo"
+                      src="/images/logo/miniseller-logo-bg-removed-908x404.png"
+                      alt="MiniSeller - Thai E-commerce Analytics Platform"
                     />
                   </Link>
                   <p className="text-center text-gray-400 dark:text-white/60">
