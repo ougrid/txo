@@ -28,12 +28,17 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
+    icon: <HorizontaLDots />,
+    name: "How It Works?",
+    path: "/how-it-works",
+  },
+  {
     icon: <GridIcon />,
     name: "Dashboard",
     subItems: [
-      { name: "Ecommerce", path: "/", pro: false },
-      { name: "Analytics", path: "/dashboard/analytics", pro: false, new: true },
-      { name: "Data Management", path: "/dashboard/data", pro: false }
+      { name: "E-commerce", path: "/dashboard", pro: false },
+      { name: "Sales Analytics", path: "/dashboard/analytics", pro: false, new: true },
+      { name: "Data Management", path: "/dashboard/data", pro: false, new: true }
     ],
   },
   {
@@ -52,14 +57,14 @@ const navItems: NavItem[] = [
     path: "/platform-management",
   },
   {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
-  {
     icon: <FileIcon />,
     name: "File Upload",
     path: "/file-upload",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "User Profile",
+    path: "/profile",
   },
   {
     icon: <CalenderIcon />,

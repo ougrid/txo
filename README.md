@@ -265,8 +265,8 @@ The platform includes a complete shop management system designed for Thai e-comm
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/miniseller.git
-   cd miniseller
+   git clone https://github.com/ougrid/txo.git
+   cd txo
    ```
 
 2. **Install dependencies**
@@ -280,7 +280,7 @@ The platform includes a complete shop management system designed for Thai e-comm
    ```
 
 4. **Open in browser**
-   Navigate to `http://localhost:3000`
+   Navigate to `http://localhost:3000` - The application will automatically load the "How It Works" page as the default landing experience, providing comprehensive information about MiniSeller's workflow and capabilities before users access the dashboard.
 
 ### Build for Production
 ```bash
@@ -288,44 +288,75 @@ npm run build
 npm start
 ```
 
+## 🎯 User Experience & Navigation
+
+### **Default Landing Experience**
+**How It Works First:** MiniSeller now prioritizes user education and onboarding by presenting the "How It Works" page as the default landing experience. This approach ensures that:
+
+- **New Users**: Immediately understand MiniSeller's capabilities and workflow before diving into the application
+- **Comprehensive Overview**: Users see the complete workflow from barcode scanning to ERP integration with interactive diagrams
+- **Educational Priority**: Step-by-step process explanation, key features, and benefits are presented upfront
+- **Seamless Transition**: Users can easily navigate to the dashboard and other features once they understand the system
+
+### **Navigation Structure**
+**Primary Routes:**
+- **`/` (Root)** → Automatically redirects to How It Works page for optimal user onboarding
+- **`/how-it-works`** → Comprehensive workflow documentation with interactive diagram
+- **`/dashboard`** → Main analytics and e-commerce metrics dashboard
+- **`/shop-management`** → Multi-shop monitoring and barcode scanning interface
+- **`/order-analytics`** → Advanced order filtering and reporting system
+- **`/platform-management`** → Platform connections and integration management
+
+**Authentication Flow:**
+- **First-time visitors** → Land on How It Works page to learn about MiniSeller
+- **Returning users** → Can quickly navigate to dashboard via sidebar navigation
+- **Authenticated users** → Maintain access to all protected routes with session persistence
+
 ## 📋 Complete Usage Guide
 
 ### **Step-by-Step Workflow**
 
-#### 1. **Authentication & Setup**
+#### 1. **First Visit Experience**
+1. **How It Works Landing**: New users automatically land on the comprehensive "How It Works" page
+2. **Interactive Workflow Diagram**: Explore the complete MiniSeller workflow with zoom and pan controls
+3. **Educational Content**: Learn about barcode scanning, Shopee API integration, and ERP automation
+4. **Feature Overview**: Understand key capabilities, benefits, and step-by-step processes
+5. **Navigation to Dashboard**: Use sidebar navigation to access the main application features
+
+#### 2. **Authentication & Setup**
 1. **User Registration**: Create account with secure password requirements
 2. **Profile Setup**: Complete user profile with business information
 3. **Session Management**: Automatic login persistence across browser sessions
 4. **Security Features**: Password changes and profile updates
 
-#### 2. **Shop Management Dashboard**
+#### 3. **Shop Management Dashboard**
 1. **Access Shop Management**: Navigate to "Shop Management" dashboard
 2. **Monitor Shop Status**: View real-time status of all connected shops
 3. **Barcode Scanning**: Use interactive scanner to process orders
 4. **Order Processing**: Track orders through complete lifecycle
 5. **Issue Resolution**: Handle API problems and connection issues
 
-#### 3. **Order Analytics & Reporting**
+#### 4. **Order Analytics & Reporting**
 1. **Order Analytics**: Access comprehensive order filtering and analysis
 2. **Status Filtering**: Filter by pending scan, scanned, processed, shipped, delivered, completed
 3. **Multi-Shop Analysis**: Compare performance across multiple shops
 4. **Export Capabilities**: Generate reports in CSV, Excel, and PDF formats
 5. **Real-time Metrics**: Monitor order counts and status distribution
 
-#### 4. **Platform Management**
+#### 5. **Platform Management**
 1. **Platform Connections**: Manage integrations with Shopee, Lazada, TikTok Shop
 2. **API Configuration**: Set up shop credentials and connection settings
 3. **Connection Health**: Monitor platform availability and integration status
 4. **Help Resources**: Access guides for platform setup and troubleshooting
 
-#### 5. **Data Upload & Processing**
+#### 6. **Data Upload & Processing**
 1. **File Upload**: Upload Excel (.xlsx, .xls) or CSV files with order data
 2. **Real-time Preview**: View data structure and automatic column mapping
 3. **Revenue Calculation**: System automatically applies Thai e-commerce revenue formulas
 4. **Validation Check**: Review any errors or warnings before proceeding
 5. **Save Dataset**: Processed data is automatically saved to local storage
 
-#### 6. **Analytics Dashboard Navigation**
+#### 7. **Analytics Dashboard Navigation**
 1. **Access Dashboard**: Navigate to "Dashboard" → "Analytics"
 2. **Review Key Metrics**: 
    - Total Revenue with accurate Thai platform calculations
@@ -521,4 +552,89 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**MiniSeller** - Empowering Thai e-commerce businesses with accurate analytics, comprehensive shop management, and actionable insights.
+## 🎯 **Complete Implementation Summary**
+
+### **1. Workflow Diagram Integration**
+
+✅ **WorkflowDiagramModal** (`src/components/modals/WorkflowDiagramModal.tsx`)
+- Interactive modal with zoom/pan functionality
+- Uses existing SVG diagram (`/examples/project-details/JUBB-HLA_v0.2_svg.svg`)
+- "Don't show again" option with localStorage
+- Navigation to detailed page
+- Properly sized icons (4x4 for optimal display)
+
+✅ **useWorkflowModal Hook** (`src/hooks/useWorkflowModal.ts`)
+- Manages modal display logic
+- localStorage preferences
+- Automatic display on first visit
+
+✅ **How It Works Page** (`src/app/(admin)/how-it-works/page.tsx`)
+- Comprehensive workflow documentation
+- Interactive diagram using existing SVG file
+- Step-by-step process explanation
+- Feature highlights and benefits
+
+✅ **WorkflowTrigger Component** (`src/components/common/WorkflowTrigger.tsx`)
+- Reusable trigger component with optimized icon sizing
+- Multiple variants (button, link, icon)
+- Flexible sizing options
+
+### **2. Integration Points**
+
+✅ **Dashboard Integration** (`src/app/(admin)/page.tsx`)
+- Modal shows automatically on first login
+- Respects user preferences
+
+✅ **Header Integration** (`src/layout/AppHeader.tsx`)
+- Quick access icon in header (properly sized at 4x4)
+- Always available for users
+
+✅ **Sidebar Navigation** (`src/layout/AppSidebar.tsx`)
+- "How It Works?" menu item
+- Easy navigation to detailed page
+
+### **3. Key Features**
+
+🔍 **Zoom & Pan Controls**
+- Zoom in/out buttons
+- Reset zoom functionality
+- Smooth interactions with existing SVG diagram
+
+📱 **Responsive Design**
+- Works on all screen sizes
+- Mobile-friendly interface
+- Properly displays complex workflow diagrams
+
+💾 **User Preferences**
+- "Don't show again" option
+- localStorage persistence
+- Respects user choices
+
+🎨 **Consistent Styling**
+- Matches existing design system
+- Custom icon library integration (properly sized icons)
+- Dark/light mode support
+- Professional diagram presentation
+
+### **4. User Experience Flow**
+
+1. **First Login** → Modal appears automatically with interactive diagram
+2. **Quick Access** → Header icon (4x4 size) for immediate access
+3. **Detailed View** → Navigate to dedicated page with comprehensive workflow
+4. **Future Sessions** → Respects "don't show again" preference
+
+### **5. Technical Implementation**
+
+📄 **SVG Diagram Integration**
+- Uses existing high-quality workflow diagram (`JUBB-HLA_v0.2_svg.svg`)
+- Maintains diagram fidelity and professional appearance
+- Interactive zoom/pan functionality preserves diagram details
+- Consistent presentation across modal and dedicated page
+
+🔧 **Icon Optimization**
+- Fixed icon sizing issues (reduced from 5x5 to 4x4)
+- Prevents icon cropping and cutoff problems
+- Consistent icon presentation across all components
+- Improved visual hierarchy and readability
+
+The implementation provides multiple entry points for users to access workflow information while maintaining a clean, non-intrusive user experience. All components are fully typed with TypeScript, use your existing SVG diagram file, and integrate seamlessly with your existing codebase architecture with properly sized icons throughout.

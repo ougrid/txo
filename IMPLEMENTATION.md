@@ -142,46 +142,80 @@ Platform connection and integration management:
 - **Help Documentation**: Comprehensive guides for API setup and troubleshooting
 - **Status Monitoring**: Platform availability and connection health tracking
 
-**Integration Management:**
-- **API Credential Handling**: Secure input forms for Partner ID, API keys, and shop names
-- **Connection Status**: Visual indicators for platform availability and integration status
-- **Help Resources**: Documentation links and troubleshooting guides for each platform
-- **Future Expansion**: Framework ready for additional platform integrations
+### 15. Workflow Diagram System
 
-### 13. Dashboard Components (`src/components/dashboard/`)
+Comprehensive workflow visualization and user onboarding system:
 
-Reusable UI components for shop management functionality:
+**Workflow Features:**
+- **Interactive Modal Display**: Automatic modal on first login with zoom/pan controls for diagram exploration
+- **Existing SVG Integration**: Uses high-quality existing workflow diagram (`/examples/project-details/JUBB-HLA_v0.2_svg.svg`)
+- **Multiple Access Points**: Header icon trigger, sidebar navigation, and automatic first-visit display
+- **User Preferences**: "Don't show again" option with localStorage persistence for user control
+- **Responsive Design**: Optimized for all device sizes with professional diagram presentation
 
-**Component Library:**
-- **ShopCard**: Individual shop status card with metrics, issues, and quick actions
-- **BarcodeScanner**: Interactive scanning interface with sample data and real-time feedback
-- **OrderList**: Filterable order display with status indicators and quick actions
-- **PlatformSelector**: Platform filtering with shop counts and availability status
-- **ActivityFeed**: Real-time activity timeline with scanning history and status changes
-- **DashboardOverview**: Key metrics summary with visual statistics cards
+**Component Architecture:**
+- **WorkflowDiagramModal**: Main modal component with zoom/pan functionality and existing SVG integration
+- **useWorkflowModal Hook**: State management for modal display logic and localStorage preferences
+- **WorkflowTrigger**: Reusable component with multiple variants (button, link, icon) and optimized sizing
+- **How It Works Page**: Comprehensive documentation page with interactive diagram and detailed explanations
 
-**Component Features:**
-- **Responsive Design**: Mobile-optimized layouts for all device sizes
-- **Real-time Updates**: Live data binding with automatic refresh capabilities
-- **Interactive Elements**: Hover effects, tooltips, and contextual help throughout
-- **Type Safety**: Full TypeScript integration with comprehensive prop validation
+**Technical Improvements:**
+- **Icon Optimization**: Fixed sizing issues by reducing icon dimensions from 5x5 to 4x4 pixels for better visual hierarchy
+- **SVG File Integration**: Replaced custom-drawn SVG with existing professional workflow diagram for consistency
+- **TypeScript Integration**: Full type safety with comprehensive interface definitions throughout all components
+- **Performance Optimization**: Efficient zoom/pan controls with smooth animations and proper event handling
 
-### 14. Barcode Scanning System
+**User Experience Flow:**
+1. **First Login** → Automatic modal display with interactive workflow diagram
+2. **Quick Access** → Header icon (properly sized) for immediate diagram access
+3. **Detailed Documentation** → Dedicated page with comprehensive workflow explanation
+4. **Preference Management** → User-controlled "don't show again" functionality
 
-Interactive order processing simulation with realistic Thai e-commerce data:
+**Integration Points:**
+- **Dashboard Integration**: Seamless modal trigger on first user visit with preference respect
+- **Header Integration**: Quick access icon with optimized 4x4 sizing for visual consistency
+- **Navigation Integration**: Sidebar menu item for easy access to detailed workflow documentation
+- **Design System Compliance**: Consistent styling with existing dark/light mode support
 
-**Scanning Features:**
-- **Sample Barcode Data**: Authentic Thai order numbers for testing (250717CXPUJJBE, 250716A5D1TJTW, etc.)
-- **Real-time Processing**: Instant order lookup and status updates with visual feedback
-- **Scan History**: Recent scanning activity with order details and timestamps
-- **Quick Scan Actions**: Direct scanning from order lists and pending queues
-- **Error Handling**: Comprehensive error messages for invalid or already-scanned orders
+### 16. Default Landing Page System
 
-**Thai Business Integration:**
-- **Authentic Order Data**: Real Thai product names, customer names, and order amounts
-- **Order Status Flow**: Proper progression from pending scan to delivery
-- **Commission Calculations**: Platform fee deductions and net revenue calculations
-- **Regional Data**: Thai province and district information for geographic analytics
+Comprehensive routing configuration prioritizing user education and onboarding:
+
+**Landing Page Strategy:**
+- **Education-First Approach**: Prioritizes user understanding of MiniSeller's capabilities before dashboard access
+- **How It Works Default**: Root URL (`/`) automatically redirects to the comprehensive "How It Works" page
+- **Seamless Navigation**: Users can easily navigate to dashboard and other features after understanding the system
+- **Optimal User Onboarding**: New users immediately see workflow diagrams, process explanations, and feature benefits
+
+**Routing Architecture:**
+- **Root Page** (`src/app/page.tsx`): Client-side redirect to `/how-it-works` with loading state
+- **Admin Root** (`src/app/(admin)/page.tsx`): Redirects to `/how-it-works` for consistency
+- **Dashboard Relocation** (`src/app/(admin)/dashboard/page.tsx`): Moved original dashboard content to dedicated route
+- **Middleware Updates** (`middleware.ts`): Updated authentication redirects to point to How It Works page
+
+**Technical Implementation:**
+```typescript
+// Root page redirect
+export default function HomePage() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/how-it-works');
+  }, [router]);
+  return <LoadingState />;
+}
+```
+
+**Navigation Updates:**
+- **Sidebar Navigation**: Updated "E-commerce" dashboard link from `/` to `/dashboard`
+- **Authentication Flow**: Post-login redirects now point to `/how-it-works` instead of dashboard
+- **Protected Routes**: Dashboard remains protected while How It Works is publicly accessible
+- **User Experience**: Maintains all existing functionality with improved first-visit experience
+
+**Benefits:**
+- **Improved Onboarding**: New users understand system capabilities before diving into complex features
+- **Educational Priority**: Step-by-step workflow explanation with interactive diagrams
+- **Professional Presentation**: Showcases system capabilities and business value upfront
+- **Reduced Learning Curve**: Users arrive at dashboard with clear understanding of system functionality
 
 ## Implementation Details
 
@@ -283,14 +317,16 @@ Next.js middleware for server-side route protection:
 #### Public Routes:
 - `/signin` - Authentication page
 - `/signup` - Registration page
-- `/` - Landing page
+- `/` - Landing page (redirects to /how-it-works)
+- `/how-it-works` - Default landing experience with workflow documentation
 - `/api/*` - API endpoints
 
 #### Features:
-- **Automatic Redirects**: Unauthenticated users redirected to signin
+- **Automatic Redirects**: Unauthenticated users redirected to signin, authenticated users redirected to how-it-works
 - **Return URL Preservation**: Maintains intended destination after login
 - **Session Validation**: Server-side session verification
 - **Path Matching**: Efficient route pattern matching
+- **Education-First Routing**: Default redirects prioritize user onboarding over immediate dashboard access
 
 ### 5. Authentication Guards (`src/components/auth/AuthGuard.tsx`)
 
@@ -398,9 +434,11 @@ Integrated user profile management with authentication:
 ```
 src/
 ├── types/
-│   └── auth.ts                 # Authentication type definitions
+│   ├── auth.ts                 # Authentication type definitions
+│   └── shop.ts                 # Shop management type definitions
 ├── services/
-│   └── auth.ts                 # Authentication service layer
+│   ├── auth.ts                 # Authentication service layer
+│   └── shopService.ts          # Shop management service layer
 ├── context/
 │   └── AuthContext.tsx         # Authentication context provider
 ├── components/
@@ -408,11 +446,26 @@ src/
 │   │   ├── AuthGuard.tsx       # Route protection components
 │   │   ├── SignInForm.tsx      # Sign-in form component
 │   │   └── SignUpForm.tsx      # Sign-up form component
-│   └── user-profile/
-│       └── UserInfoCard.tsx    # Profile management component
+│   ├── user-profile/
+│   │   └── UserInfoCard.tsx    # Profile management component
+│   └── modals/
+│       └── WorkflowDiagramModal.tsx # Interactive workflow modal
 ├── app/
 │   ├── layout.tsx              # App layout with AuthProvider
-│   ├── (admin)/                # Protected dashboard routes
+│   ├── page.tsx                # Root page (redirects to /how-it-works)
+│   ├── (admin)/
+│   │   ├── page.tsx            # Admin root (redirects to /how-it-works)
+│   │   ├── layout.tsx          # Admin layout with sidebar
+│   │   ├── dashboard/
+│   │   │   └── page.tsx        # Main dashboard (moved from root)
+│   │   ├── how-it-works/
+│   │   │   └── page.tsx        # Default landing page
+│   │   ├── shop-management/
+│   │   │   └── page.tsx        # Shop management dashboard
+│   │   ├── order-analytics/
+│   │   │   └── page.tsx        # Order analytics system
+│   │   └── platform-management/
+│   │       └── page.tsx        # Platform management
 │   └── (full-width-pages)/     # Public authentication pages
 └── middleware.ts               # Route protection middleware
 ```
