@@ -1,12 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { platformConfigs } from '@/services/shopService';
 import { Platform } from '@/types/shop';
 
 export default function PlatformManagementPage() {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
   const [showConnectionModal, setShowConnectionModal] = useState(false);
+  const [highlightShopee, setHighlightShopee] = useState(false);
+
+  // Handle hash navigation for Shopee integration
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === '#shopee-integration') {
+      // Scroll to the top of the page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Highlight the Shopee section for 3 seconds without scrolling
+      setHighlightShopee(true);
+      setTimeout(() => setHighlightShopee(false), 3000);
+    }
+  }, []);
 
   const handleConnectPlatform = (platform: Platform) => {
     const config = platformConfigs[platform];
@@ -92,6 +105,29 @@ export default function PlatformManagementPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes subtleBounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-6px);
+          }
+        }
+        @keyframes subtlePulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.6;
+          }
+        }
+        .highlight-shopee {
+          animation: subtlePulse 2s ease-in-out infinite, subtleBounce 2s ease-in-out infinite;
+        }
+        `
+      }} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -107,10 +143,15 @@ export default function PlatformManagementPage() {
             return (
               <div 
                 key={platform}
-                className={`bg-white rounded-lg border-2 p-6 transition-all ${
+                id={platform === 'shopee' ? 'shopee-integration' : undefined}
+                className={`bg-white rounded-lg border-2 p-6 transition-all scroll-mt-20 ${
                   config.isAvailable 
                     ? 'border-gray-200 hover:border-blue-300 hover:shadow-md' 
                     : 'border-gray-100 bg-gray-50'
+                } ${
+                  platform === 'shopee' && highlightShopee 
+                    ? 'ring-4 ring-blue-500 ring-opacity-50 bg-blue-50 rounded-lg highlight-shopee' 
+                    : ''
                 }`}
               >
                 {/* Platform Header */}

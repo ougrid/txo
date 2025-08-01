@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ArrowRightIcon, CheckCircleIcon, InfoIcon } from '@/icons';
 
 export default function HowItWorksPage() {
@@ -32,25 +33,29 @@ export default function HowItWorksPage() {
       step: "1",
       title: "Scan Product Barcode",
       description: "Scan the AWB barcode on your product parcel using your barcode scanner connected to MiniSeller.",
-      details: "MiniSeller seamlessly integrates with your existing barcode scanners to capture order information instantly."
+      details: "MiniSeller seamlessly integrates with your existing barcode scanners to capture order information instantly.",
+      link: "/shop-management#barcode-scanner"
     },
     {
       step: "2", 
       title: "Shopee API Integration",
       description: "MiniSeller automatically fetches order details from Shopee API v2 using the scanned barcode.",
-      details: "Real-time data retrieval ensures you always have the most up-to-date order information."
+      details: "Real-time data retrieval ensures you always have the most up-to-date order information.",
+      link: "/platform-management#shopee-integration"
     },
     {
       step: "3",
       title: "Intelligent Data Processing", 
       description: "Order information is processed and validated through our cloud-based processing system.",
-      details: "Advanced algorithms ensure data accuracy and completeness before ERP entry."
+      details: "Advanced algorithms ensure data accuracy and completeness before ERP entry.",
+      link: "/shop-management#pending-scans"
     },
     {
       step: "4",
       title: "Automated ERP Entry",
       description: "The Local Auto-Input Agent automatically enters the processed data into your ERP system.",
-      details: "Compatible with Senior Soft and other popular ERP systems for seamless integration."
+      details: "Compatible with Senior Soft and other popular ERP systems for seamless integration.",
+      link: "/order-analytics#export-options"
     }
   ];
 
@@ -138,15 +143,20 @@ export default function HowItWorksPage() {
                   </div>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{step.title}</h3>
+                  {step.link ? (
+                    <Link href={step.link} className="group">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer">
+                        {step.title}
+                        <ArrowRightIcon className="inline-block w-6 h-6 ml-2 opacity-60 group-hover:opacity-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-all" />
+                      </h3>
+                    </Link>
+                  ) : (
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{step.title}
+                    </h3>
+                  )}
                   <p className="text-gray-600 dark:text-gray-400 mb-2">{step.description}</p>
                   <p className="text-sm text-gray-500 dark:text-gray-500">{step.details}</p>
                 </div>
-                {index < steps.length - 1 && (
-                  <div className="flex-shrink-0 pt-5">
-                    <ArrowRightIcon className="w-5 h-5 text-gray-400" />
-                  </div>
-                )}
               </div>
             ))}
           </div>

@@ -93,13 +93,19 @@ export default function BarcodeScanner({ onScanComplete, className = '' }: Barco
 
         {/* Sample Barcodes for Testing */}
         <div className="border-t border-gray-100 pt-4">
-          <p className="text-xs text-gray-500 mb-3">Sample order numbers for testing:</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          <p className="text-xs text-gray-500 mb-3">Example order numbers for testing:</p>
+          <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-2">
             {sampleBarcodes.map((barcode, index) => (
               <button
                 key={index}
                 onClick={() => setScannedCode(barcode)}
-                className="text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded border text-xs font-mono transition-colors"
+                className="text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded border text-xs font-mono transition-colors truncate w-full max-w-full overflow-hidden"
+                title={barcode}
+                style={{ 
+                  minWidth: '0',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
               >
                 {barcode}
               </button>
@@ -116,17 +122,17 @@ export default function BarcodeScanner({ onScanComplete, className = '' }: Barco
             {recentScans.map((order, index) => (
               <div 
                 key={`${order.order_sn}-${index}`}
-                className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
+                className="flex items-start justify-between p-3 bg-green-50 border border-green-200 rounded-lg gap-3"
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-green-800 truncate">
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-sm font-medium text-green-800 font-mono" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>
                     {order.order_sn}
                   </p>
-                  <p className="text-xs text-green-600 truncate">
+                  <p className="text-xs text-green-600 truncate mt-1">
                     {order.productName}
                   </p>
                 </div>
-                <div className="text-right ml-3">
+                <div className="text-right flex-shrink-0 whitespace-nowrap">
                   <div className="text-sm font-semibold text-green-800">
                     ฿{order.amount.toLocaleString()}
                   </div>
