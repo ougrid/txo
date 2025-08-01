@@ -176,7 +176,7 @@ export default function ShopManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <style dangerouslySetInnerHTML={{
         __html: `
         @keyframes subtleBounce {
@@ -211,18 +211,18 @@ export default function ShopManagementPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Shop Management Dashboard</h1>
-              <p className="text-gray-600 mt-2">Monitor and manage your multi-platform e-commerce operations</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shop Management Dashboard</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">Monitor and manage your multi-platform e-commerce operations</p>
             </div>
             <div className="flex items-center space-x-4">
               {/* Tab Switcher */}
-              <div className="flex bg-gray-100 rounded-lg p-1">
+              <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
                 <button
                   onClick={() => setActiveTab('overview')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'overview'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   Overview
@@ -231,10 +231,10 @@ export default function ShopManagementPage() {
                   onClick={() => setActiveTab('orders')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'orders'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   } ${
-                    highlightOrdersTab ? 'ring-2 ring-blue-500 ring-opacity-50 bg-blue-50 highlight-orders-tab' : ''
+                    highlightOrdersTab ? 'ring-2 ring-blue-500 ring-opacity-50 bg-blue-50 dark:bg-blue-900/30 highlight-orders-tab' : ''
                   }`}
                 >
                   Orders
@@ -243,7 +243,7 @@ export default function ShopManagementPage() {
               
               <button 
                 onClick={loadData}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors flex items-center space-x-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -258,8 +258,8 @@ export default function ShopManagementPage() {
         {scanMessage && (
           <div className={`mb-6 p-4 rounded-lg border ${
             scanMessage.type === 'success' 
-              ? 'bg-green-50 border-green-200 text-green-800' 
-              : 'bg-red-50 border-red-200 text-red-800'
+              ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-400' 
+              : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-800 dark:text-red-400'
           }`}>
             <div className="flex items-center space-x-2">
               <span className="text-lg">
@@ -296,10 +296,10 @@ export default function ShopManagementPage() {
             {/* Shops Section */}
             <div className="xl:col-span-2">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {selectedPlatform === 'all' ? 'All Shops' : `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} Shops`}
                 </h2>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   {filteredShops.length} shop{filteredShops.length !== 1 ? 's' : ''}
                 </span>
               </div>
@@ -318,10 +318,10 @@ export default function ShopManagementPage() {
               {filteredShops.length === 0 && (
                 <div className="text-center py-12">
                   <div className="text-gray-400 text-6xl mb-4">🏪</div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                     {selectedPlatform === 'all' ? 'No shops connected' : `No ${selectedPlatform} shops found`}
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 dark:text-gray-400">
                     {selectedPlatform === 'all' 
                       ? 'Connect your first shop to get started with order management.'
                       : `Try selecting a different platform or connect a ${selectedPlatform} shop.`
@@ -333,11 +333,11 @@ export default function ShopManagementPage() {
 
             {/* Barcode Scanner Section */}
             <div id="barcode-scanner" className="xl:col-span-1 scroll-mt-20">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Scanner</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Order Scanner</h2>
               <BarcodeScanner 
                 onScanComplete={handleScanComplete}
                 className={`sticky top-6 transition-all duration-1000 ${
-                  highlightScanner ? 'ring-4 ring-blue-500 ring-opacity-50 bg-blue-50 rounded-lg highlight-scanner' : ''
+                  highlightScanner ? 'ring-4 ring-blue-500 ring-opacity-50 bg-blue-50 dark:bg-blue-900/30 rounded-lg highlight-scanner' : ''
                 }`}
               />
             </div>
@@ -349,7 +349,7 @@ export default function ShopManagementPage() {
             <div 
               id="pending-scans"
               className={`xl:col-span-2 transition-all duration-1000 ${
-                highlightPendingScans ? 'ring-4 ring-blue-500 ring-opacity-50 bg-blue-50 rounded-lg p-4 -m-4 highlight-pending-scans' : ''
+                highlightPendingScans ? 'ring-4 ring-blue-500 ring-opacity-50 bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 -m-4 highlight-pending-scans' : ''
               }`}
             >
               <OrderList
@@ -374,50 +374,50 @@ export default function ShopManagementPage() {
         {/* Recent Activity */}
         {stats && stats.recentActivity.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Scanning Activity</h2>
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Recent Scanning Activity</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Order
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Product
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Customer
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Amount
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Scanned
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {stats.recentActivity.map((order, index) => (
-                      <tr key={`${order.order_sn}-${index}`} className="hover:bg-gray-50">
+                      <tr key={`${order.order_sn}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900 font-mono">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white font-mono">
                             {order.order_sn}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
                             {order.awb_number}
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900 max-w-xs truncate" title={order.productName}>
+                          <div className="text-sm text-gray-900 dark:text-white max-w-xs truncate" title={order.productName}>
                             {order.productName}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{order.customerName}</div>
+                          <div className="text-sm text-gray-900 dark:text-white">{order.customerName}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-semibold text-gray-900">
+                          <div className="text-sm font-semibold text-gray-900 dark:text-white">
                             ฿{order.amount.toLocaleString()}
                           </div>
                         </td>

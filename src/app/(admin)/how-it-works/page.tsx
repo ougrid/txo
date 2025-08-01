@@ -61,32 +61,32 @@ export default function HowItWorksPage() {
 
   const features = [
     {
-      icon: <CheckCircleIcon className="w-6 h-6 text-green-500" />,
+      icon: "📱",
       title: "Barcode Scanning Integration",
       description: "Seamlessly integrates with your existing barcode scanners"
     },
     {
-      icon: <CheckCircleIcon className="w-6 h-6 text-green-500" />,
+      icon: "🛒", 
       title: "Shopee API Integration", 
       description: "Direct integration with Shopee API v2 for real-time data"
     },
     {
-      icon: <CheckCircleIcon className="w-6 h-6 text-green-500" />,
+      icon: "⚡",
       title: "Automated Data Entry",
       description: "Eliminates manual data entry with RPA automation"
     },
     {
-      icon: <CheckCircleIcon className="w-6 h-6 text-green-500" />,
+      icon: "📊",
       title: "ERP System Support",
       description: "Compatible with Senior Soft and other ERP systems"
     },
     {
-      icon: <CheckCircleIcon className="w-6 h-6 text-green-500" />,
+      icon: "☁️",
       title: "Cloud-Based Processing",
       description: "Reliable cloud infrastructure for data processing"
     },
     {
-      icon: <CheckCircleIcon className="w-6 h-6 text-green-500" />,
+      icon: "📋",
       title: "Audit Trail",
       description: "Complete logging and tracking of all operations"
     }
@@ -241,7 +241,7 @@ export default function HowItWorksPage() {
             {features.map((feature, index) => (
               <div key={index} className="flex items-start gap-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50">
                 <div className="flex-shrink-0">
-                  {feature.icon}
+                  <span className="text-2xl">{feature.icon}</span>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
