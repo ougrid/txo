@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { InfoIcon, CloseIcon } from '@/icons';
 
@@ -128,11 +129,14 @@ const WorkflowDiagramModal: React.FC<WorkflowDiagramModalProps> = ({ isOpen, onC
                   transition: isPanning ? 'none' : 'transform 0.2s ease'
                 }}
               >
-                <img
+                <Image
                   src="/examples/project-details/JUBB-HLA_v0.2_svg.svg"
                   alt="MiniSeller Workflow Diagram"
+                  width={800}
+                  height={600}
                   className="max-w-full max-h-full object-contain"
                   draggable={false}
+                  priority
                 />
               </div>
             </div>
