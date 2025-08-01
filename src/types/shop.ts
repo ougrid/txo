@@ -2,7 +2,7 @@ export type Platform = 'shopee' | 'lazada' | 'tiktok';
 
 export type ShopStatus = 'connected' | 'disconnected' | 'needs_attention';
 export type ApiStatus = 'healthy' | 'expired_soon' | 'needs_reconnection';
-export type OrderStatus = 'pending_scan' | 'scanned' | 'processed' | 'completed';
+export type OrderStatus = 'pending_scan' | 'scanned' | 'processed' | 'shipped' | 'delivered' | 'completed';
 
 export interface Order {
   order_sn: string; // Shopee order number from barcode

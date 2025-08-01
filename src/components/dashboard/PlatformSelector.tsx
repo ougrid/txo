@@ -30,7 +30,7 @@ export default function PlatformSelector({
           const isSelected = selectedPlatform === platform.key;
           const count = shopCounts[platform.key] || 0;
           const config = platform.key !== 'all' ? platformConfigs[platform.key as Platform] : null;
-          const isDisabled = config && !config.isAvailable;
+          const isDisabled = !!(config && !config.isAvailable);
           
           return (
             <button

@@ -27,6 +27,8 @@ export default function OrderList({
       case 'shipped':
         return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'delivered':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      case 'completed':
         return 'bg-gray-100 text-gray-800 border-gray-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';

@@ -58,7 +58,8 @@ export default function OrderAnalyticsPage() {
       scanned: filtered.filter(o => o.status === 'scanned').length,
       processed: filtered.filter(o => o.status === 'processed').length,
       shipped: filtered.filter(o => o.status === 'shipped').length,
-      delivered: filtered.filter(o => o.status === 'delivered').length
+      delivered: filtered.filter(o => o.status === 'delivered').length,
+      completed: filtered.filter(o => o.status === 'completed').length
     };
     
     return {
@@ -158,6 +159,9 @@ export default function OrderAnalyticsPage() {
                 <option value="pending_scan">Pending Scan</option>
                 <option value="scanned">Scanned</option>
                 <option value="processed">Processed</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="completed">Completed</option>
                 <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
               </select>
