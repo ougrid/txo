@@ -36,5 +36,25 @@ Further implement the following features from the README.md file
   - polling in interval (interval time to poll latest data should also be configurable by user)
   - <!> show "last update" datetime from each shop
   - <!> show orders of finished scanning orders, and orders to scanned from shopee
-- feat: show orders that are being scanned and orders that are finished scanning
+- feat: in "Scan Orders" page, show orders that are being scanned and orders that are finished scanning
 - feat: example Excel order files for user to download and test upload to the system
+- The "File Upload" workflow is:
+  1. User uploads an Excel or CSV file containing their order data.
+  2. The system processes the uploaded file and extracts relevant information.
+  3. The user can preview the extracted data before finalizing the upload.
+  4. Once confirmed, the data is sent to the backend for storage and further processing.
+  5. The user receives a notification once the processing is complete, along with any relevant insights or calculations.
+- The "Scan Orders" workflow is:
+  1. In physical world, user initiates the barcode scanning process of each Shopee Parcel AWB (Air Waybill) that is the Parcel Order Detail Sheet (ใบปะหน้าพัสดุ), that will give us the order_sn (หมายเลขคำสั่งซื้อ) as input from barcode reading and filled in an input field of the application.
+  2. User doesn't have to selects a Shopee shop from their connected accounts. The system automatically detects the shop based on the order_sn and will map it to the latest orders from the Shopee API.
+  3. The system fetches the latest orders from the Shopee API for every shops that user owns .
+  4. The user can view the fetched orders in a list format, with options to filter and sort.
+  5. The user can mark orders as processed or completed, which updates their status in the system.
+  6. The system provides insights on order processing times, shipping statuses, and any issues encountered.
+  7. The user can export the processed orders for record-keeping or further analysis.
+  8. The system allows for real-time updates on order statuses, ensuring the user is always informed of the latest developments.
+  9. The system should handle errors gracefully, providing clear feedback to the user if any issues arise during the scanning or processing of orders.
+  10. The system should allow users to re-scan orders if needed, ensuring flexibility in the order processing workflow.
+  11. The system should provide a history of scanned orders, allowing users to track past activities and review order processing details.
+  12. The system should support multiple scanning methods, including manual entry and barcode scanning, to accommodate different user preferences and scenarios.
+  13. The system should allow users to set reminders or notifications for pending orders, ensuring timely processing and follow-up.
