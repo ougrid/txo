@@ -22,6 +22,11 @@ const authRoutes = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Handle admin root redirect - redirect to how-it-works
+  if (pathname === '/admin' || pathname === '/admin/') {
+    return NextResponse.redirect(new URL('/how-it-works', request.url));
+  }
+  
   // Get session token from cookies or localStorage (we'll check both)
   const sessionCookie = request.cookies.get('miniseller_auth_session');
   
