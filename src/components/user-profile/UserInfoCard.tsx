@@ -1,18 +1,108 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
-import Input from "../form/input/InputField";
 import Label from "../form/Label";
+import { useAuth } from "@/context/AuthContext";
 
 export default function UserInfoCard() {
+  const { user, updateProfile, isLoading, error } = useAuth();
   const { isOpen, openModal, closeModal } = useModal();
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
-    closeModal();
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    bio: '',
+    socialLinks: {
+      facebook: '',
+      twitter: '',
+      linkedin: '',
+      instagram: ''
+    }
+  });
+  
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Initialize form data when user data is available
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        bio: user.bio || '',
+        socialLinks: {
+          facebook: user.socialLinks?.facebook || '',
+          twitter: user.socialLinks?.twitter || '',
+          linkedin: user.socialLinks?.linkedin || '',
+          instagram: user.socialLinks?.instagram || ''
+        }
+      });
+    }
+  }, [user]);
+
+  const handleInputChange = (field: string, value: string) => {
+    if (field.startsWith('socialLinks.')) {
+      const socialField = field.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        socialLinks: {
+          ...prev.socialLinks,
+          [socialField]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
+
+  const handleSave = async () => {
+    setFormError(null);
+    setIsUpdating(true);
+
+    // Basic validation
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+      setFormError('First name, last name, and email are required');
+      setIsUpdating(false);
+      return;
+    }
+
+    const result = await updateProfile({
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      bio: formData.bio.trim(),
+      socialLinks: formData.socialLinks
+    });
+
+    setIsUpdating(false);
+
+    if (result.success) {
+      closeModal();
+    } else {
+      setFormError(result.error || 'Failed to update profile');
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+        <div className="flex items-center justify-center h-32">
+          <p className="text-gray-500 dark:text-gray-400">Please sign in to view your profile</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -27,7 +117,7 @@ export default function UserInfoCard() {
                 First Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                John
+                {user.firstName || 'Not set'}
               </p>
             </div>
 
@@ -36,7 +126,7 @@ export default function UserInfoCard() {
                 Last Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Doe
+                {user.lastName || 'Not set'}
               </p>
             </div>
 
@@ -45,7 +135,7 @@ export default function UserInfoCard() {
                 Email address
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                john.doe@example.com
+                {user.email}
               </p>
             </div>
 
@@ -54,7 +144,7 @@ export default function UserInfoCard() {
                 Phone
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                +1 (555) 123-4567
+                {user.phone || 'Not set'}
               </p>
             </div>
 
@@ -63,7 +153,7 @@ export default function UserInfoCard() {
                 Bio
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Software Developer
+                {user.bio || 'Not set'}
               </p>
             </div>
           </div>
@@ -71,7 +161,8 @@ export default function UserInfoCard() {
 
         <button
           onClick={openModal}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
+          disabled={isLoading}
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
             className="fill-current"
@@ -88,7 +179,7 @@ export default function UserInfoCard() {
               fill=""
             />
           </svg>
-          Edit
+          {isLoading ? 'Loading...' : 'Edit'}
         </button>
       </div>
 
@@ -102,7 +193,20 @@ export default function UserInfoCard() {
               Update your details to keep your profile up-to-date.
             </p>
           </div>
-          <form className="flex flex-col">
+
+          {/* Error Alert */}
+          {(formError || error) && (
+            <div className="mx-2 mb-6 p-4 rounded-lg bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-red-700 dark:text-red-300">{formError || error}</p>
+              </div>
+            </div>
+          )}
+
+          <form className="flex flex-col" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
               <div>
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
@@ -112,30 +216,49 @@ export default function UserInfoCard() {
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div>
                     <Label>Facebook</Label>
-                    <Input
+                    <input
+                      className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
                       type="text"
-                      defaultValue="https://www.facebook.com/PimjoHQ"
+                      value={formData.socialLinks.facebook}
+                      onChange={(e) => handleInputChange('socialLinks.facebook', e.target.value)}
+                      disabled={isUpdating}
+                      placeholder="https://facebook.com/username"
                     />
                   </div>
 
                   <div>
                     <Label>X.com</Label>
-                    <Input type="text" defaultValue="https://x.com/PimjoHQ" />
+                    <input
+                      className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+                      type="text"
+                      value={formData.socialLinks.twitter}
+                      onChange={(e) => handleInputChange('socialLinks.twitter', e.target.value)}
+                      disabled={isUpdating}
+                      placeholder="https://x.com/username"
+                    />
                   </div>
 
                   <div>
                     <Label>Linkedin</Label>
-                    <Input
+                    <input
+                      className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
                       type="text"
-                      defaultValue="https://www.linkedin.com/company/pimjo"
+                      value={formData.socialLinks.linkedin}
+                      onChange={(e) => handleInputChange('socialLinks.linkedin', e.target.value)}
+                      disabled={isUpdating}
+                      placeholder="https://linkedin.com/in/username"
                     />
                   </div>
 
                   <div>
                     <Label>Instagram</Label>
-                    <Input
+                    <input
+                      className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
                       type="text"
-                      defaultValue="https://instagram.com/PimjoHQ"
+                      value={formData.socialLinks.instagram}
+                      onChange={(e) => handleInputChange('socialLinks.instagram', e.target.value)}
+                      disabled={isUpdating}
+                      placeholder="https://instagram.com/username"
                     />
                   </div>
                 </div>
@@ -147,39 +270,85 @@ export default function UserInfoCard() {
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>First Name</Label>
-                    <Input type="text" defaultValue="John" />
+                    <Label>First Name *</Label>
+                    <input
+                      className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+                      type="text"
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      disabled={isUpdating}
+                      required
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Last Name</Label>
-                    <Input type="text" defaultValue="Doe" />
+                    <Label>Last Name *</Label>
+                    <input
+                      className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      disabled={isUpdating}
+                      required
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
-                    <Input type="text" defaultValue="john.doe@example.com" />
+                    <Label>Email Address *</Label>
+                    <input
+                      className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      disabled={isUpdating}
+                      required
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
                     <Label>Phone</Label>
-                    <Input type="text" defaultValue="+1 (555) 123-4567" />
+                    <input
+                      className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      disabled={isUpdating}
+                      placeholder="+1 (555) 123-4567"
+                    />
                   </div>
 
                   <div className="col-span-2">
                     <Label>Bio</Label>
-                    <Input type="text" defaultValue="Software Developer" />
+                    <input
+                      className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+                      type="text"
+                      value={formData.bio}
+                      onChange={(e) => handleInputChange('bio', e.target.value)}
+                      disabled={isUpdating}
+                      placeholder="Tell us about yourself"
+                    />
                   </div>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
+              <Button size="sm" variant="outline" onClick={closeModal} disabled={isUpdating}>
                 Close
               </Button>
-              <Button size="sm" onClick={handleSave}>
-                Save Changes
-              </Button>
+              <button 
+                className="inline-flex items-center justify-center font-medium gap-2 rounded-lg transition px-3 py-2 text-sm bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50"
+                type="submit" 
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Saving...
+                  </div>
+                ) : (
+                  'Save Changes'
+                )}
+              </button>
             </div>
           </form>
         </div>

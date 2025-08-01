@@ -1,0 +1,16 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none"
+  xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="16" fill="#3B82F6"/>
+
+  <!-- Mini Icon -->
+  <rect x="8" y="8" width="6" height="6" rx="1" fill="#FFFFFF"/>
+  <rect x="8" y="14" width="6" height="3" rx="0.5" fill="#E5E7EB"/>
+  <rect x="8" y="17" width="6" height="7" rx="1" fill="#FFFFFF"/>
+
+  <!-- Seller Icon (Cart) -->
+  <path d="M18 10h5l1 6h-6v-6z" fill="#FFFFFF"/>
+  <circle cx="19.5" cy="20" r="1.5" fill="#FFFFFF"/>
+  <circle cx="22" cy="20" r="1.5" fill="#FFFFFF"/>
+  <path d="M18 9l1-1h3l1 1v1h-5v-1z" fill="#E5E7EB"/>
+</svg>
