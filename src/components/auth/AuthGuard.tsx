@@ -30,7 +30,7 @@ export function AuthGuard({
         router.push(redirectUrl);
       } else if (!requireAuth && isAuthenticated) {
         // Redirect authenticated users away from auth pages
-        router.push('/dashboard/analytics');
+        router.push('/how-it-works');
       }
     }
   }, [isAuthenticated, isLoading, requireAuth, redirectTo, router]);
