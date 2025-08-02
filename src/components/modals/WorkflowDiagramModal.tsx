@@ -77,9 +77,9 @@ const WorkflowDiagramModal: React.FC<WorkflowDiagramModalProps> = ({ isOpen, onC
         </div>
 
         {/* Content */}
-        <div className="flex flex-col lg:flex-row h-[calc(90vh-140px)]">
+        <div className="flex flex-col lg:flex-row h-[calc(90vh-140px)] overflow-hidden">
           {/* Diagram Section */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-6 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                 Interactive Workflow Diagram
@@ -114,7 +114,7 @@ const WorkflowDiagramModal: React.FC<WorkflowDiagramModalProps> = ({ isOpen, onC
             </div>
             
             <div 
-              className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800 h-full"
+              className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800 min-h-[400px]"
               style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
@@ -122,7 +122,7 @@ const WorkflowDiagramModal: React.FC<WorkflowDiagramModalProps> = ({ isOpen, onC
               onMouseLeave={handleMouseUp}
             >
               <div 
-                className="h-full w-full flex items-center justify-center p-4"
+                className="w-full flex items-center justify-center p-4 min-h-[400px]"
                 style={{
                   transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`,
                   transformOrigin: 'center center',
@@ -143,7 +143,7 @@ const WorkflowDiagramModal: React.FC<WorkflowDiagramModalProps> = ({ isOpen, onC
           </div>
 
           {/* Info Panel */}
-          <div className="w-full lg:w-80 p-6 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div className="w-full lg:w-80 p-6 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 overflow-y-auto">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
               Quick Overview
             </h3>

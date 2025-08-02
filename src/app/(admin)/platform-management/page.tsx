@@ -3,14 +3,27 @@
 import React, { useState, useEffect } from 'react';
 import { platformConfigs } from '@/services/shopService';
 import { Platform } from '@/types/shop';
+import ConnectionModal from '@/components/modals/ConnectionModal';
 
 export default function PlatformManagementPage() {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
   const [showConnectionModal, setShowConnectionModal] = useState(false);
   const [highlightShopee, setHighlightShopee] = useState(false);
+  const [connectedPlatforms, setConnectedPlatforms] = useState<Set<Platform>>(new Set());
 
   // Handle hash navigation for Shopee integration
   useEffect(() => {
+    // Load connected platforms from localStorage
+    const savedConnections = localStorage.getItem('connectedPlatforms');
+    if (savedConnections) {
+      try {
+        const platforms = JSON.parse(savedConnections);
+        setConnectedPlatforms(new Set(platforms));
+      } catch (error) {
+        console.error('Failed to load connected platforms:', error);
+      }
+    }
+
     const hash = window.location.hash;
     if (hash === '#shopee-integration') {
       // Scroll to the top of the page
@@ -30,81 +43,39 @@ export default function PlatformManagementPage() {
     setShowConnectionModal(true);
   };
 
-  const ConnectionModal = () => {
-    if (!selectedPlatform || !showConnectionModal) return null;
+  const handleConnectionSubmit = async (connectionData: { shopName: string; apiKey: string; partnerId: string }) => {
+    // Mock API call - simulate connection process
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const config = platformConfigs[selectedPlatform];
+    // Mock success - add platform to connected platforms
+    if (selectedPlatform) {
+      const newConnectedPlatforms = new Set([...connectedPlatforms, selectedPlatform]);
+      setConnectedPlatforms(newConnectedPlatforms);
+      
+      // Persist to localStorage
+      localStorage.setItem('connectedPlatforms', JSON.stringify([...newConnectedPlatforms]));
+    }
     
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full mx-4 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Connect to {config.name}
-            </h3>
-            <button 
-              onClick={() => setShowConnectionModal(false)}
-              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Shop Name
-              </label>
-              <input
-                type="text"
-                placeholder={`Enter your ${config.name} shop name`}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Key
-              </label>
-              <input
-                type="password"
-                placeholder="Enter your API key"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Partner ID
-              </label>
-              <input
-                type="text"
-                placeholder="Enter your Partner ID"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-          
-          <div className="mt-6 flex space-x-3">
-            <button
-              onClick={() => setShowConnectionModal(false)}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              Connect Shop
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    console.log('Connected to platform:', selectedPlatform, connectionData);
+  };
+
+  const handleCloseModal = () => {
+    setShowConnectionModal(false);
+    setSelectedPlatform(null);
+  };
+
+  const handleDisconnectPlatform = (platform: Platform) => {
+    const newConnectedPlatforms = new Set(connectedPlatforms);
+    newConnectedPlatforms.delete(platform);
+    setConnectedPlatforms(newConnectedPlatforms);
+    
+    // Update localStorage
+    localStorage.setItem('connectedPlatforms', JSON.stringify([...newConnectedPlatforms]));
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <React.Fragment>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <style dangerouslySetInnerHTML={{
         __html: `
         @keyframes subtleBounce {
@@ -195,7 +166,7 @@ export default function PlatformManagementPage() {
                         <span className={`text-sm ${
                           config.isAvailable ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'
                         }`}>
-                          {feature.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          {feature.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </span>
                       </div>
                     ))}
@@ -208,16 +179,43 @@ export default function PlatformManagementPage() {
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-sm text-gray-600 dark:text-gray-400">Status</span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                          Not Connected
-                        </span>
+                        {connectedPlatforms.has(platform) ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
+                            ✓ Connected
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                            Not Connected
+                          </span>
+                        )}
                       </div>
-                      <button
-                        onClick={() => handleConnectPlatform(platform)}
-                        className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-${config.color}-600 text-white hover:bg-${config.color}-700`}
-                      >
-                        Connect Shop
-                      </button>
+                      {connectedPlatforms.has(platform) ? (
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => handleConnectPlatform(platform)}
+                            className="w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-800 flex items-center justify-center space-x-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>Configure</span>
+                          </button>
+                          <button
+                            onClick={() => handleDisconnectPlatform(platform)}
+                            className="w-full px-3 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                          >
+                            Disconnect
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleConnectPlatform(platform)}
+                          className="w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-orange-600 text-white hover:bg-orange-700"
+                        >
+                          Connect Shop
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center">
@@ -272,8 +270,14 @@ export default function PlatformManagementPage() {
           </div>
         </div>
       </div>
+      </div>
 
-      <ConnectionModal />
-    </div>
+      <ConnectionModal 
+        isOpen={showConnectionModal}
+        onClose={handleCloseModal}
+        platform={selectedPlatform}
+        onConnect={handleConnectionSubmit}
+      />
+    </React.Fragment>
   );
 }
