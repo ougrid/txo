@@ -217,6 +217,187 @@ export default function HomePage() {
 - **Professional Presentation**: Showcases system capabilities and business value upfront
 - **Reduced Learning Curve**: Users arrive at dashboard with clear understanding of system functionality
 
+### 17. Platform Connection Modal System
+
+Comprehensive platform integration management with persistent state:
+
+**ConnectionModal Features:**
+- **Platform Connection Interface**: Modal-based connection setup for Shopee, Lazada, TikTok Shop
+- **Form Validation**: Real-time validation for shop name, API key, and partner ID fields
+- **localStorage Persistence**: Connected platform states saved locally with connect/disconnect functionality
+- **Portal Rendering**: Uses React createPortal for proper DOM rendering and z-index management
+- **Modal Blur Effects**: Comprehensive page blur with CSS filter effects and backdrop blur
+- **API Key Security**: Toggle visibility for API key fields with eye icon controls
+- **Connection Status**: Visual indicators showing connected/disconnected states with appropriate styling
+
+**Technical Implementation:**
+```typescript
+// ConnectionModal.tsx - Standalone component with internal state
+interface ConnectionData {
+  shopName: string;
+  apiKey: string;
+  partnerId: string;
+}
+
+const ConnectionModal: React.FC<ConnectionModalProps> = ({ 
+  isOpen, onClose, platform, onConnect 
+}) => {
+  // Portal rendering with extreme z-index for guaranteed overlay
+  return createPortal(modalContent, document.body);
+};
+```
+
+**CSS Integration:**
+```css
+/* globals.css - Modal blur effect */
+.modal-open {
+  overflow: hidden;
+}
+
+.modal-open > *:not(.modal-container) {
+  filter: blur(2px);
+  transition: filter 0.3s ease;
+}
+```
+
+**State Management:**
+- **Internal Component State**: Self-contained form state management without external dependencies
+- **localStorage Integration**: Platform connection persistence across browser sessions
+- **Connect/Disconnect Flow**: Status changes with immediate UI updates and button state transitions
+- **Error Handling**: Comprehensive error states with user-friendly feedback
+
+### 18. Cross-Page Navigation with Highlighting System
+
+Advanced navigation system enabling deep linking between admin pages with visual feedback:
+
+**Deep Linking Features:**
+- **Clickable Step Titles**: How It Works page step titles link to relevant admin sections
+- **Automatic Section Highlighting**: Target sections pulse and animate for 3 seconds upon navigation
+- **URL Fragment Support**: Hash-based navigation to specific page sections
+- **Visual Feedback**: Pulse and bounce animations drawing attention to target areas
+
+**Navigation Mapping:**
+```typescript
+// how-it-works/page.tsx - Step navigation links
+const steps = [
+  {
+    title: "Scan Product Barcode",
+    link: "/shop-management#barcode-scanner"
+  },
+  {
+    title: "Shopee API Integration", 
+    link: "/platform-management#shopee-integration"
+  },
+  {
+    title: "Intelligent Data Processing",
+    link: "/shop-management#pending-scans"
+  },
+  {
+    title: "Automated ERP Entry",
+    link: "/order-analytics#export-options"
+  }
+];
+```
+
+**Highlighting Implementation:**
+```typescript
+// Target pages - Section highlighting with CSS animations
+const [highlightSection, setHighlightSection] = useState(false);
+
+useEffect(() => {
+  if (router.asPath.includes('#section-id')) {
+    setHighlightSection(true);
+    setTimeout(() => setHighlightSection(false), 3000);
+  }
+}, [router.asPath]);
+```
+
+**Animation CSS:**
+```css
+.highlight-section {
+  animation: highlight-pulse 3s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+```
+
+**Enhanced User Experience:**
+- **Contextual Navigation**: Direct links from educational content to functional areas
+- **Visual Continuity**: Smooth transitions with clear visual indicators
+- **Reduced Cognitive Load**: Users understand exactly where they've navigated and why
+- **Interactive Learning**: Educational content directly connects to hands-on functionality
+
+### 19. Enhanced Dark Mode Support System
+
+Comprehensive dark theme implementation across all dashboard components:
+
+**Component Coverage:**
+- **Shop Management**: ShopCard, BarcodeScanner, OrderList components with full dark mode
+- **Order Analytics**: Filtering interface, status indicators, and data tables
+- **Platform Management**: Connection cards, status badges, and feature displays
+- **Dashboard Components**: ActivityFeed, DashboardOverview, PlatformSelector
+
+**Styling Enhancements:**
+```typescript
+// ShopCard.tsx - Enhanced status colors with dark mode variants
+const getStatusColor = (status: Shop['status']) => {
+  switch (status) {
+    case 'connected':
+      return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
+    case 'needs_attention':
+      return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
+    case 'disconnected':
+      return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
+  }
+};
+```
+
+**Implementation Pattern:**
+- **Consistent Color Scheme**: Standardized dark mode colors across all components
+- **Semantic Color Usage**: Status-based colors with appropriate dark variants
+- **Accessibility Compliance**: Proper contrast ratios maintained in both themes
+- **Responsive Design**: Dark mode styling works across all device sizes
+
+**Visual Improvements:**
+- **Background Variations**: Subtle background colors for better visual hierarchy
+- **Border Adjustments**: Appropriate border colors for dark theme compatibility
+- **Text Contrast**: Optimized text colors for readability in both light and dark modes
+- **Interactive States**: Hover and focus states properly styled for both themes
+
+### 20. AuthGuard Enhancement System
+
+Updated authentication flow prioritizing user education and improved user experience:
+
+**Redirection Strategy:**
+- **Education-First Authentication**: Authenticated users redirected to `/how-it-works` instead of dashboard
+- **Learning-Oriented Flow**: New users see comprehensive system overview before accessing features
+- **Contextual Onboarding**: Authentication success leads to educational content for better understanding
+
+**Technical Implementation:**
+```typescript
+// AuthGuard.tsx - Updated redirection logic
+useEffect(() => {
+  if (!isLoading) {
+    if (requireAuth && !isAuthenticated) {
+      const redirectUrl = redirectTo || `/signin?redirect=${encodeURIComponent(router.asPath)}`;
+      router.push(redirectUrl);
+    } else if (!requireAuth && isAuthenticated) {
+      // Redirect authenticated users to educational content
+      router.push('/how-it-works');
+    }
+  }
+}, [isAuthenticated, isLoading, requireAuth, redirectTo, router]);
+```
+
+**User Experience Benefits:**
+- **Reduced Cognitive Overload**: Users understand system capabilities before feature exploration
+- **Professional Onboarding**: First impression focuses on value proposition and workflow
+- **Intuitive Navigation**: Clear path from authentication to education to functionality
+- **Improved Retention**: Users better understand system value through guided introduction
+
 ## Implementation Details
 
 ### 1. Authentication Types (`src/types/auth.ts`)
@@ -448,8 +629,15 @@ src/
 │   │   └── SignUpForm.tsx      # Sign-up form component
 │   ├── user-profile/
 │   │   └── UserInfoCard.tsx    # Profile management component
+│   ├── dashboard/              # Dashboard component library
+│   │   ├── ShopCard.tsx        # Shop status cards with dark mode
+│   │   ├── BarcodeScanner.tsx  # Interactive barcode scanning
+│   │   ├── OrderList.tsx       # Order management with filtering
+│   │   ├── ActivityFeed.tsx    # Real-time activity display
+│   │   └── PlatformSelector.tsx # Platform filtering component
 │   └── modals/
-│       └── WorkflowDiagramModal.tsx # Interactive workflow modal
+│       ├── WorkflowDiagramModal.tsx # Interactive workflow modal
+│       └── ConnectionModal.tsx      # Platform connection modal
 ├── app/
 │   ├── layout.tsx              # App layout with AuthProvider
 │   ├── page.tsx                # Root page (redirects to /how-it-works)
