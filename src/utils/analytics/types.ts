@@ -104,7 +104,7 @@ export interface DateRange {
 }
 
 export interface DateFilter {
-  type: 'custom' | 'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear';
+  type: 'custom' | 'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'last3months';
   range?: DateRange;
   label: string;
 }
