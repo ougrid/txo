@@ -58,11 +58,11 @@ export class DateFilterUtils {
         }
       },
       {
-        type: 'thisYear',
-        label: 'This Year',
+        type: 'last3months',
+        label: 'Last 3 Months',
         range: {
-          start: new Date(now.getFullYear(), 0, 1),
-          end: new Date(now.getFullYear(), 11, 31, 23, 59, 59)
+          start: new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000),
+          end: new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1)
         }
       }
     ];
